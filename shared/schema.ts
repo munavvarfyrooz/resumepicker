@@ -23,7 +23,7 @@ export const candidates = pgTable("candidates", {
   fileType: text("file_type").notNull(),
   filePath: text("file_path").notNull(),
   extractedText: text("extracted_text").notNull(),
-  yearsExperience: integer("years_experience"),
+  yearsExperience: real("years_experience"),
   lastRoleTitle: text("last_role_title"),
   experienceGaps: jsonb("experience_gaps").$type<Array<{
     start: string;
