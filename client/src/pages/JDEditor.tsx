@@ -53,7 +53,17 @@ export default function JDEditor() {
   // AI Analysis mutation
   const analyzeSkillsMutation = useMutation({
     mutationFn: async (description: string) => {
-      return await apiRequest('POST', '/api/jobs/analyze-skills', { description });
+      const response = await fetch('/api/jobs/analyze-skills', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to analyze skills');
+      }
+      
+      return await response.json();
     },
     onSuccess: (response) => {
       console.log('AI Analysis Response:', response); // Debug log
