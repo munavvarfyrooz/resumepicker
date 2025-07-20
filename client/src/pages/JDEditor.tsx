@@ -70,12 +70,18 @@ export default function JDEditor() {
       const analysis = response;
       setAiAnalysisResult(analysis);
       
-      // Update the skills arrays with AI results
+      // Update the skills arrays with AI results (avoiding duplicates)
       if (analysis.mustHaveSkills && Array.isArray(analysis.mustHaveSkills)) {
-        setMustHaveSkills(prev => [...new Set([...prev, ...analysis.mustHaveSkills])]);
+        setMustHaveSkills(prev => {
+          const newSkills = analysis.mustHaveSkills.filter(skill => !prev.includes(skill));
+          return [...prev, ...newSkills];
+        });
       }
       if (analysis.niceToHaveSkills && Array.isArray(analysis.niceToHaveSkills)) {
-        setNiceToHaveSkills(prev => [...new Set([...prev, ...analysis.niceToHaveSkills])]);
+        setNiceToHaveSkills(prev => {
+          const newSkills = analysis.niceToHaveSkills.filter(skill => !prev.includes(skill));
+          return [...prev, ...newSkills];
+        });
       }
       
       const mustCount = analysis.mustHaveSkills?.length || 0;

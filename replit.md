@@ -126,10 +126,11 @@ The application requires the following environment variables:
 ## Recent Changes
 
 ### Latest Updates (July 20, 2025)
-- **AI-Powered Job Description Analysis**: Implemented automatic skill extraction from job descriptions using OpenAI GPT-4o
+- **AI-Powered Job Description Analysis**: Implemented automatic skill extraction from job descriptions using OpenAI GPT-4o with proper duplicate prevention
 - **Delete Functionality**: Added comprehensive delete capabilities for jobs and candidates with cascade deletion and smart auto-navigation
 - **Enhanced Mobile Experience**: Improved mobile responsiveness with proper scrolling and touch interactions
 - **Smart Job Navigation**: Auto-switching to available jobs when current job is deleted to prevent navigation errors
+- **Skill Extraction Fix**: Resolved frontend response parsing issue for AI skill extraction functionality
 
 ### Deployment
 The system is built to scale horizontally with stateless backend services and can be deployed on platforms like Railway, Vercel, or traditional VPS environments.
