@@ -76,8 +76,8 @@ export default function FilterBar() {
   }).length;
 
   return (
-    <div className="bg-surface border-b border-border px-6 py-3">
-      <div className="flex items-center space-x-6">
+    <div className="bg-surface border-b border-border px-3 md:px-6 py-2 md:py-3">
+      <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0 md:space-x-6">
         {/* Min Years Filter */}
         <div className="flex items-center space-x-2">
           <Label className="text-sm text-text-secondary whitespace-nowrap">Min Years:</Label>

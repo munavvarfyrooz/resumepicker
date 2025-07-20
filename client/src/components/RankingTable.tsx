@@ -280,45 +280,139 @@ export default function RankingTable() {
   });
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id} className="bg-gray-50">
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id} className="py-3 px-4 font-medium text-text-secondary text-sm border-b border-border">
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.header, header.getContext())}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                className="cursor-pointer hover:bg-gray-50"
-                onClick={() => setSelectedCandidate(row.original)}
+    <div className="flex-1 overflow-auto">
+      {/* Mobile Card View */}
+      <div className="md:hidden p-3">
+        {filteredCandidates.length > 0 ? (
+          <div className="space-y-3">
+            {filteredCandidates.map((candidate) => (
+              <div
+                key={candidate.id}
+                className="bg-white rounded-lg p-4 border shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                onClick={() => setSelectedCandidate(candidate)}
               >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="py-4 px-4">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <Checkbox
+                      checked={selectedCandidateIds.includes(candidate.id)}
+                      onCheckedChange={(checked) => toggleCandidateSelection(candidate.id)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <Avatar className="w-10 h-10">
+                      <AvatarFallback className="text-sm bg-blue-100 text-blue-600">
+                        {candidate.name.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xl font-bold text-blue-600">
+                      {candidate.score?.totalScore?.toFixed(0) || 0}
+                    </div>
+                    <div className="text-xs text-gray-500">Total Score</div>
+                  </div>
+                </div>
+                
+                <div className="mb-3">
+                  <h3 className="font-semibold text-gray-900 text-base mb-1">
+                    {candidate.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {candidate.lastRoleTitle || 'No title'} • {candidate.yearsExperience || 0} years
+                  </p>
+                </div>
+                
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {candidate.skills.slice(0, 4).map((skill, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs px-2 py-1">
+                      {skill.skill}
+                    </Badge>
+                  ))}
+                  {candidate.skills.length > 4 && (
+                    <Badge variant="outline" className="text-xs px-2 py-1">
+                      +{candidate.skills.length - 4}
+                    </Badge>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-4 gap-2 text-xs">
+                  <div className="text-center">
+                    <div className="font-medium text-gray-900">
+                      {candidate.score?.skillMatchScore?.toFixed(0) || 0}%
+                    </div>
+                    <div className="text-gray-500">Skills</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-gray-900">
+                      {candidate.score?.titleScore?.toFixed(0) || 0}%
+                    </div>
+                    <div className="text-gray-500">Title</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-gray-900">
+                      {candidate.score?.seniorityScore?.toFixed(0) || 0}%
+                    </div>
+                    <div className="text-gray-500">Seniority</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-medium text-gray-900">
+                      {(candidate.experienceGaps || []).length}
+                    </div>
+                    <div className="text-gray-500">Gaps</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No candidates found</p>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop Table View */}
+      <div className="hidden md:block">
+        <div className="rounded-md border overflow-x-auto">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="bg-gray-50">
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id} className="py-3 px-4 font-medium text-text-secondary text-sm border-b border-border">
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => setSelectedCandidate(row.original)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className="py-3 px-4 border-b border-border">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                    No candidates found
                   </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No candidates found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     </div>
   );
 }

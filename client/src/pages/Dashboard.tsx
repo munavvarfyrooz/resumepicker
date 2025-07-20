@@ -9,7 +9,7 @@ import FilterBar from "@/components/FilterBar";
 import ScoreWeightsModal from "@/components/ScoreWeightsModal";
 import JDEditor from "./JDEditor";
 import { Button } from "@/components/ui/button";
-import { Settings, Download } from "lucide-react";
+import { Settings, Download, Briefcase } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Dashboard() {
@@ -118,13 +118,44 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <LeftSidebar />
+    <div className="flex min-h-screen bg-background flex-col md:flex-row">
+      {/* Mobile Header */}
+      <div className="md:hidden bg-surface border-b border-border px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+              <Briefcase className="w-4 h-4 text-white" />
+            </div>
+            <h1 className="text-lg font-semibold text-text-primary">TalentMatch</h1>
+          </div>
+          <div className="flex space-x-1">
+            <Button
+              variant={view === 'ranking' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setView('ranking')}
+            >
+              Ranking
+            </Button>
+            <Button
+              variant={view === 'jd-editor' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setView('jd-editor')}
+            >
+              Edit
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Sidebar - Hidden on mobile, visible on desktop */}
+      <div className="hidden md:block">
+        <LeftSidebar />
+      </div>
       
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navigation */}
-        <div className="bg-surface border-b border-border px-6 py-4">
-          <div className="flex items-center justify-between">
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Desktop Top Navigation */}
+        <div className="hidden md:block bg-surface border-b border-border px-6 py-4">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center space-x-4">
               <h1 className="text-lg font-semibold text-text-primary">{selectedJob.title}</h1>
               <div className="flex space-x-2">
@@ -145,23 +176,27 @@ export default function Dashboard() {
               </div>
             </div>
             
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleCalculateScores}
+                className="text-xs md:text-sm"
               >
-                <Settings className="w-4 h-4 mr-1" />
-                Calculate Scores
+                <Settings className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                <span className="hidden sm:inline">Calculate Scores</span>
+                <span className="sm:hidden">Calc</span>
               </Button>
               
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setWeightsModalOpen(true)}
+                className="text-xs md:text-sm"
               >
-                <Settings className="w-4 h-4 mr-1" />
-                Configure Weights
+                <Settings className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                <span className="hidden sm:inline">Configure Weights</span>
+                <span className="sm:hidden">Config</span>
               </Button>
               
               <Button
@@ -169,21 +204,58 @@ export default function Dashboard() {
                 size="sm"
                 onClick={handleExportShortlist}
                 disabled={selectedCandidateIds.length === 0}
-                className="bg-success hover:bg-green-600"
+                className="bg-success hover:bg-green-600 text-xs md:text-sm"
               >
-                <Download className="w-4 h-4 mr-1" />
-                Export Shortlist ({selectedCandidateIds.length})
+                <Download className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                <span className="hidden sm:inline">Export Shortlist ({selectedCandidateIds.length})</span>
+                <span className="sm:hidden">Export ({selectedCandidateIds.length})</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Action Bar */}
+        <div className="md:hidden bg-surface border-b border-border px-4 py-2">
+          <div className="flex items-center justify-between space-x-2">
+            <div className="text-sm font-medium text-text-primary truncate">
+              {selectedJob.title}
+            </div>
+            <div className="flex items-center space-x-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCalculateScores}
+                className="text-xs px-2"
+              >
+                <Settings className="w-3 h-3" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setWeightsModalOpen(true)}
+                className="text-xs px-2"
+              >
+                Config
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleExportShortlist}
+                disabled={selectedCandidateIds.length === 0}
+                className="bg-success hover:bg-green-600 text-xs px-2"
+              >
+                Export ({selectedCandidateIds.length})
               </Button>
             </div>
           </div>
         </div>
 
         {view === 'ranking' && (
-          <>
+          <div className="flex-1 flex flex-col overflow-hidden">
             <FilterBar />
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-auto">
               {candidatesLoading ? (
-                <div className="flex items-center justify-center h-full">
+                <div className="flex items-center justify-center h-full min-h-[200px]">
                   <div className="text-center">
                     <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                     <p className="text-gray-600">Loading candidates...</p>
@@ -193,11 +265,11 @@ export default function Dashboard() {
                 <RankingTable />
               )}
             </div>
-          </>
+          </div>
         )}
 
         {view === 'jd-editor' && (
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-auto">
             <JDEditor />
           </div>
         )}
