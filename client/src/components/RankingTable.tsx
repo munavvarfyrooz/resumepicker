@@ -202,11 +202,40 @@ export default function RankingTable() {
       },
     },
     {
+      id: 'titleMatch',
+      accessorFn: (row) => row.score?.titleScore || 0,
+      header: 'Title Match',
+      cell: ({ row }) => {
+        const score = row.original.score?.titleScore || 0;
+        
+        return (
+          <div className="flex items-center space-x-2">
+            <div className="w-full bg-gray-200 rounded-full h-2 max-w-[80px]">
+              <div
+                className={`h-2 rounded-full ${
+                  score >= 80 ? 'bg-success' : score >= 60 ? 'bg-warning' : 'bg-danger'
+                }`}
+                style={{ width: `${score}%` }}
+              />
+            </div>
+            <span className="text-sm text-text-secondary min-w-[35px]">{score}%</span>
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: 'yearsExperience',
       header: 'Years Exp',
       cell: ({ row }) => {
         const years = row.original.yearsExperience;
-        return <span className="text-text-primary">{years ? `${years} years` : 'N/A'}</span>;
+        const seniorityScore = row.original.score?.seniorityScore || 0;
+        
+        return (
+          <div className="flex flex-col">
+            <span className="text-text-primary">{years ? `${years} years` : 'N/A'}</span>
+            <span className="text-xs text-text-secondary">({seniorityScore}% match)</span>
+          </div>
+        );
       },
     },
     {

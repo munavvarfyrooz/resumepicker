@@ -9,7 +9,7 @@ import FilterBar from "@/components/FilterBar";
 import ScoreWeightsModal from "@/components/ScoreWeightsModal";
 import { Button } from "@/components/ui/button";
 import { Settings, Download } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function Dashboard() {
   const params = useParams();
@@ -81,6 +81,27 @@ export default function Dashboard() {
     }
   };
 
+  const handleCalculateScores = async () => {
+    if (!selectedJob) return;
+
+    try {
+      await apiRequest('POST', `/api/jobs/${selectedJob.id}/rescore`, {
+        weights: {
+          skills: 0.5,
+          title: 0.2,
+          seniority: 0.15,
+          recency: 0.1,
+          gaps: 0.05,
+        },
+      });
+      
+      // Invalidate and refetch candidates data
+      queryClient.invalidateQueries({ queryKey: ['/api/jobs', selectedJob.id, 'candidates'] });
+    } catch (error) {
+      console.error('Failed to calculate scores:', error);
+    }
+  };
+
   if (!selectedJob) {
     return (
       <div className="flex h-screen">
@@ -124,6 +145,15 @@ export default function Dashboard() {
             </div>
             
             <div className="flex items-center space-x-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCalculateScores}
+              >
+                <Settings className="w-4 h-4 mr-1" />
+                Calculate Scores
+              </Button>
+              
               <Button
                 variant="outline"
                 size="sm"
