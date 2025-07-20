@@ -329,8 +329,8 @@ export default function RankingTable() {
         }
 
         return (
-          <div className="flex items-center space-x-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${
+          <div className="flex items-center space-x-2 min-w-[300px] w-[300px]">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 ${
               aiRank <= 3 ? 'bg-green-100 text-green-800' : 
               aiRank <= 6 ? 'bg-yellow-100 text-yellow-800' : 
               'bg-red-100 text-red-800'
@@ -338,7 +338,7 @@ export default function RankingTable() {
               #{aiRank}
             </div>
             {aiReason && (
-              <div className="text-xs text-gray-500 max-w-[200px] truncate" title={aiReason}>
+              <div className="text-xs text-gray-500 max-w-[240px] truncate" title={aiReason}>
                 {aiReason}
               </div>
             )}
@@ -496,8 +496,8 @@ export default function RankingTable() {
 
       {/* Desktop Table View */}
       <div className="hidden md:block">
-        <div className="w-full overflow-x-auto border rounded-md">
-          <Table className="min-w-[1400px]">
+        <div className="w-full overflow-x-auto border rounded-md bg-white">
+          <Table className="min-w-[1600px]">
               <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="bg-gray-50">
