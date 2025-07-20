@@ -3,6 +3,7 @@ import * as path from 'path';
 import mammoth from 'mammoth';
 import { format } from 'date-fns';
 import pdfParse from 'pdf-parse';
+import { AIParsingService } from './aiParsing';
 
 export interface ParsedCV {
   text: string;
@@ -50,7 +51,7 @@ export class CVParser {
         throw new Error(`Unsupported file type: ${fileType}`);
     }
 
-    return this.extractInformation(text);
+    return await this.extractInformation(text);
   }
 
   private static async parsePDF(filePath: string): Promise<string> {
@@ -88,14 +89,21 @@ export class CVParser {
     return fs.readFileSync(filePath, 'utf-8');
   }
 
-  private static extractInformation(text: string): ParsedCV {
+  private static async extractInformation(text: string): Promise<ParsedCV> {
+    // Use AI parsing for enhanced extraction
+    const aiResult = await AIParsingService.extractSkillsWithAI(text);
+    
+    // Combine AI results with traditional parsing as fallback
     const normalizedText = text.toLowerCase();
+    const traditionalSkills = this.extractSkills(normalizedText);
+    const traditionalYears = this.extractYearsExperience(normalizedText);
+    const traditionalTitle = this.extractLastRole(text);
     
     return {
       text,
-      skills: this.extractSkills(normalizedText),
-      yearsExperience: this.extractYearsExperience(normalizedText),
-      lastRoleTitle: this.extractLastRole(text),
+      skills: aiResult.skills.length > 0 ? aiResult.skills : traditionalSkills,
+      yearsExperience: aiResult.yearsExperience ?? traditionalYears,
+      lastRoleTitle: aiResult.jobTitle ?? traditionalTitle,
       experienceGaps: this.extractGaps(text),
       experienceTimeline: this.extractTimeline(text),
     };

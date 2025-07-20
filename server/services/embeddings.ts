@@ -7,7 +7,7 @@ export interface EmbeddingResult {
 }
 
 export class EmbeddingsService {
-  private static useAI = process.env.ENABLE_AI_EMBEDDINGS === 'true';
+  private static useAI = true; // Enable AI features now that we have the API key
   private static apiKey = process.env.OPENAI_API_KEY || process.env.API_KEY || 'mock_key';
 
   static async generateEmbedding(text: string): Promise<EmbeddingResult> {

@@ -90,9 +90,13 @@ Scores are calculated in real-time and can be re-calculated when weights are adj
 - **Tailwind CSS**: Utility-first CSS framework
 - **drizzle-kit**: Database migration and introspection tool
 
-### Future Integration Points
-- **Embeddings Service**: Abstract service ready for AI/ML integration (currently using mock data)
-- **OpenAI Integration**: Placeholder for advanced text analysis and skill extraction
+### AI Integration Points
+- **OpenAI Integration**: ✅ ACTIVE - GPT-3.5-turbo for enhanced CV text analysis and skill extraction
+- **Embeddings Service**: ✅ ACTIVE - Text embeddings for semantic similarity matching
+- **AI-Powered Features**:
+  - Enhanced skill extraction using natural language understanding
+  - Semantic job title matching for better relevance scoring
+  - Intelligent text parsing for complex CV formats
 - **External APIs**: Modular design allows for easy integration with job boards or ATS systems
 
 ## Deployment Strategy

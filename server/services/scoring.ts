@@ -1,5 +1,6 @@
 import { type ScoreWeights, type CandidateWithScore, type Job } from "@shared/schema";
 import { storage } from "../storage";
+import { AIParsingService } from './aiParsing';
 
 export interface ScoreBreakdown {
   totalScore: number;
@@ -37,7 +38,7 @@ export class ScoringEngine {
     const jobSkills = await storage.getJobSkills(jobId);
 
     const skillMatch = this.calculateSkillMatch(candidateSkills, jobSkills);
-    const titleMatch = this.calculateTitleMatch(candidate.lastRoleTitle, job.title);
+    const titleMatch = await this.calculateTitleMatch(candidate.lastRoleTitle, job.title);
     const seniorityMatch = this.calculateSeniorityMatch(candidate.yearsExperience);
     const recencyScore = this.calculateRecencyScore(candidate.createdAt);
     const gapPenalty = this.calculateGapPenalty(candidate.experienceGaps || []);
@@ -110,7 +111,7 @@ export class ScoringEngine {
     };
   }
 
-  private static calculateTitleMatch(candidateTitle?: string, jobTitle?: string): number {
+  private static async calculateTitleMatch(candidateTitle?: string, jobTitle?: string): Promise<number> {
     if (!candidateTitle || !jobTitle) return 50;
 
     const candidateTitleLower = candidateTitle.toLowerCase();
@@ -120,6 +121,26 @@ export class ScoringEngine {
     if (candidateTitleLower.includes(jobTitleLower) || jobTitleLower.includes(candidateTitleLower)) {
       return 100;
     }
+
+    // Use AI semantic similarity for better matching
+    try {
+      const similarity = await AIParsingService.calculateSemanticSimilarity(candidateTitle, jobTitle);
+      const aiScore = Math.round(similarity * 100);
+      
+      // Combine AI score with traditional matching
+      const traditionalScore = this.calculateTraditionalTitleMatch(candidateTitle, jobTitle);
+      
+      // Use higher of the two scores
+      return Math.max(aiScore, traditionalScore);
+    } catch (error) {
+      console.error('AI title matching failed, using traditional method:', error);
+      return this.calculateTraditionalTitleMatch(candidateTitle, jobTitle);
+    }
+  }
+
+  private static calculateTraditionalTitleMatch(candidateTitle: string, jobTitle: string): number {
+    const candidateTitleLower = candidateTitle.toLowerCase();
+    const jobTitleLower = jobTitle.toLowerCase();
 
     // Seniority level matching
     const seniorityLevels = ['junior', 'mid', 'senior', 'lead', 'principal', 'staff'];
