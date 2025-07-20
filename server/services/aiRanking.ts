@@ -92,11 +92,26 @@ Respond with JSON in this exact format:
         throw new Error('Invalid AI response format');
       }
 
-      return result.rankings.map((ranking: any) => ({
+      // Ensure all candidates get a ranking
+      const rankings = result.rankings.map((ranking: any) => ({
         candidateId: ranking.candidateId,
         rank: ranking.rank,
         reason: ranking.reason || 'AI ranking analysis'
       }));
+
+      // Fill in any missing candidates with default rankings
+      const rankedIds = new Set(rankings.map(r => r.candidateId));
+      const missingCandidates = candidateSummaries.filter(c => !rankedIds.has(c.id));
+      
+      for (let i = 0; i < missingCandidates.length; i++) {
+        rankings.push({
+          candidateId: missingCandidates[i].id,
+          rank: rankings.length + i + 1,
+          reason: 'Standard evaluation based on profile analysis'
+        });
+      }
+
+      return rankings;
 
     } catch (error) {
       console.error('AI ranking failed:', error);
