@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import mammoth from 'mammoth';
 import { format } from 'date-fns';
+import pdfParse from 'pdf-parse';
 
 export interface ParsedCV {
   text: string;
@@ -54,12 +55,25 @@ export class CVParser {
 
   private static async parsePDF(filePath: string): Promise<string> {
     try {
-      const pdfParse = (await import('pdf-parse')).default;
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        throw new Error(`File not found: ${filePath}`);
+      }
+
       const buffer = fs.readFileSync(filePath);
+      
+      if (buffer.length === 0) {
+        throw new Error('PDF file is empty');
+      }
+
       const data = await pdfParse(buffer);
-      return data.text;
+      return data.text || 'No text content found in PDF';
     } catch (error) {
-      console.error('PDF parsing error:', error);
+      console.error('PDF parsing error for file:', filePath, error);
+      // Return a more specific error message for debugging
+      if (error instanceof Error) {
+        return `PDF parsing failed: ${error.message}`;
+      }
       return 'Error parsing PDF file';
     }
   }
@@ -100,9 +114,10 @@ export class CVParser {
   }
 
   private static extractYearsExperience(text: string): number | undefined {
-    // Look for patterns like "5 years", "5+ years", "5-7 years"
+    // Look for patterns like "5 years", "5+ years", "5-7 years", "3.8 years"
     const patterns = [
-      /(\d+)\+?\s*years?\s+(?:of\s+)?experience/gi,
+      /(\d+(?:\.\d+)?)\+?\s*years?\s+(?:of\s+)?(?:hands-on\s+)?experience/gi,
+      /(\d+(?:\.\d+)?)\+?\s*years?\s+experience/gi,
       /(\d+)\+?\s*years?\s+in/gi,
       /experience.*?(\d+)\+?\s*years?/gi,
     ];
@@ -110,9 +125,9 @@ export class CVParser {
     for (const pattern of patterns) {
       const match = text.match(pattern);
       if (match) {
-        const numbers = match[0].match(/(\d+)/g);
+        const numbers = match[0].match(/(\d+(?:\.\d+)?)/g);
         if (numbers) {
-          return parseInt(numbers[0]);
+          return parseFloat(numbers[0]);
         }
       }
     }
@@ -121,23 +136,36 @@ export class CVParser {
   }
 
   private static extractLastRole(text: string): string | undefined {
-    // Simple extraction - look for common job titles near the top of the document
+    // Look for common job titles and also extract from typical CV patterns
     const titles = [
+      'quality engineer', 'test engineer', 'automation engineer', 'sdet',
       'senior developer', 'senior engineer', 'lead developer', 'principal engineer',
       'frontend developer', 'backend developer', 'full stack developer',
       'software engineer', 'software developer', 'web developer',
       'react developer', 'javascript developer', 'python developer',
-      'devops engineer', 'data engineer', 'machine learning engineer'
+      'devops engineer', 'data engineer', 'machine learning engineer',
+      'associate consultant', 'consultant', 'qa engineer', 'qa analyst'
     ];
 
-    const upperText = text.substring(0, Math.min(1000, text.length));
+    const upperText = text.substring(0, Math.min(1500, text.length));
     
+    // First, try to find titles in the first few lines
     for (const title of titles) {
       const regex = new RegExp(title, 'gi');
       if (regex.test(upperText)) {
         return title.split(' ').map(word => 
           word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
         ).join(' ');
+      }
+    }
+
+    // Look for patterns like "Company Name — Job Title"
+    const jobTitlePattern = /—\s*([^•\n]+)/g;
+    const matches = upperText.match(jobTitlePattern);
+    if (matches && matches.length > 0) {
+      const title = matches[0].replace('—', '').trim();
+      if (title.length < 50 && title.length > 3) {
+        return title;
       }
     }
 
