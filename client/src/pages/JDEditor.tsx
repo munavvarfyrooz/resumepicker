@@ -1,0 +1,307 @@
+import { useState, useEffect } from "react";
+import { useParams, useLocation } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAppStore } from "@/store/appStore";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Save, Plus, X } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import ReactMarkdown from "react-markdown";
+
+export default function JDEditor() {
+  const params = useParams();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { selectedJob, setSelectedJob } = useAppStore();
+  
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [mustHaveSkills, setMustHaveSkills] = useState<string[]>([]);
+  const [niceToHaveSkills, setNiceToHaveSkills] = useState<string[]>([]);
+  const [newMustSkill, setNewMustSkill] = useState("");
+  const [newNiceSkill, setNewNiceSkill] = useState("");
+  const [previewMode, setPreviewMode] = useState(false);
+
+  // Fetch job details
+  const { data: job, isLoading } = useQuery({
+    queryKey: ['/api/jobs', params.id],
+    enabled: !!params.id,
+  });
+
+  // Initialize form when job loads
+  useEffect(() => {
+    if (job) {
+      setSelectedJob(job);
+      setTitle(job.title || "");
+      setDescription(job.description || "");
+      if (job.requirements) {
+        setMustHaveSkills(job.requirements.must || []);
+        setNiceToHaveSkills(job.requirements.nice || []);
+      }
+    }
+  }, [job, setSelectedJob]);
+
+  // Save job mutation
+  const saveJobMutation = useMutation({
+    mutationFn: async (jobData: any) => {
+      if (job?.id) {
+        return await apiRequest('PUT', `/api/jobs/${job.id}`, jobData);
+      } else {
+        return await apiRequest('POST', '/api/jobs', jobData);
+      }
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Job description saved successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
+      if (job?.id) {
+        queryClient.invalidateQueries({ queryKey: ['/api/jobs', job.id] });
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save job description",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSave = () => {
+    const jobData = {
+      title,
+      description,
+      requirements: {
+        must: mustHaveSkills,
+        nice: niceToHaveSkills,
+      },
+      status: job?.status || 'draft',
+    };
+
+    saveJobMutation.mutate(jobData);
+  };
+
+  const addMustSkill = () => {
+    if (newMustSkill.trim() && !mustHaveSkills.includes(newMustSkill.trim())) {
+      setMustHaveSkills([...mustHaveSkills, newMustSkill.trim()]);
+      setNewMustSkill("");
+    }
+  };
+
+  const addNiceSkill = () => {
+    if (newNiceSkill.trim() && !niceToHaveSkills.includes(newNiceSkill.trim())) {
+      setNiceToHaveSkills([...niceToHaveSkills, newNiceSkill.trim()]);
+      setNewNiceSkill("");
+    }
+  };
+
+  const removeMustSkill = (skill: string) => {
+    setMustHaveSkills(mustHaveSkills.filter(s => s !== skill));
+  };
+
+  const removeNiceSkill = (skill: string) => {
+    setNiceToHaveSkills(niceToHaveSkills.filter(s => s !== skill));
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-gray-600">Loading job details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-6xl mx-auto p-6">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              onClick={() => setLocation('/')}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+            <h1 className="text-2xl font-bold text-text-primary">
+              {job ? 'Edit Job Description' : 'Create New Job'}
+            </h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => setPreviewMode(!previewMode)}
+            >
+              {previewMode ? 'Edit' : 'Preview'}
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={saveJobMutation.isPending}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {saveJobMutation.isPending ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Editor Panel */}
+          <div className="space-y-6">
+            {/* Basic Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Basic Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Job Title</Label>
+                  <Input
+                    id="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g., Senior React Developer"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Job Description */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Job Description (Markdown)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Write your job description in Markdown..."
+                  className="min-h-[300px] font-mono"
+                />
+              </CardContent>
+            </Card>
+
+            {/* Skills */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Skills & Requirements</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Must-have skills */}
+                <div>
+                  <Label className="text-base font-medium text-danger">Must-have Skills</Label>
+                  <p className="text-sm text-gray-600 mb-3">Critical skills that candidates must possess</p>
+                  <div className="flex space-x-2 mb-3">
+                    <Input
+                      value={newMustSkill}
+                      onChange={(e) => setNewMustSkill(e.target.value)}
+                      placeholder="Add a required skill..."
+                      onKeyPress={(e) => e.key === 'Enter' && addMustSkill()}
+                    />
+                    <Button onClick={addMustSkill} size="sm">
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {mustHaveSkills.map((skill) => (
+                      <Badge key={skill} variant="destructive" className="flex items-center space-x-1">
+                        <span>{skill}</span>
+                        <button onClick={() => removeMustSkill(skill)}>
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Nice-to-have skills */}
+                <div>
+                  <Label className="text-base font-medium text-primary">Nice-to-have Skills</Label>
+                  <p className="text-sm text-gray-600 mb-3">Additional skills that would be beneficial</p>
+                  <div className="flex space-x-2 mb-3">
+                    <Input
+                      value={newNiceSkill}
+                      onChange={(e) => setNewNiceSkill(e.target.value)}
+                      placeholder="Add a nice-to-have skill..."
+                      onKeyPress={(e) => e.key === 'Enter' && addNiceSkill()}
+                    />
+                    <Button onClick={addNiceSkill} size="sm">
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {niceToHaveSkills.map((skill) => (
+                      <Badge key={skill} variant="secondary" className="flex items-center space-x-1">
+                        <span>{skill}</span>
+                        <button onClick={() => removeNiceSkill(skill)}>
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Preview Panel */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Preview</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-text-primary">{title || 'Untitled Job'}</h2>
+                  </div>
+                  
+                  <div className="prose prose-sm max-w-none">
+                    <ReactMarkdown>{description || '*No description provided*'}</ReactMarkdown>
+                  </div>
+
+                  {(mustHaveSkills.length > 0 || niceToHaveSkills.length > 0) && (
+                    <div className="space-y-4 pt-4 border-t">
+                      {mustHaveSkills.length > 0 && (
+                        <div>
+                          <h3 className="font-medium text-danger mb-2">Required Skills</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {mustHaveSkills.map((skill) => (
+                              <Badge key={skill} variant="destructive">{skill}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {niceToHaveSkills.length > 0 && (
+                        <div>
+                          <h3 className="font-medium text-primary mb-2">Nice to Have</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {niceToHaveSkills.map((skill) => (
+                              <Badge key={skill} variant="secondary">{skill}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
