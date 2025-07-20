@@ -10,6 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 export default function CandidateModal() {
@@ -50,19 +51,22 @@ export default function CandidateModal() {
 
   return (
     <Dialog open={!!selectedCandidate} onOpenChange={() => setSelectedCandidate(null)}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[95vh] overflow-hidden p-0">
+        <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>Candidate Details</DialogTitle>
+          <DialogDescription>
+            Comprehensive candidate analysis and scoring details
+          </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="max-h-[80vh] pr-4">
+        <div className="overflow-y-auto max-h-[calc(95vh-80px)] px-6 py-4 custom-scroll">
           {/* Candidate Summary */}
-          <div className="flex items-center space-x-4 mb-6">
-            <Avatar className="h-16 w-16">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
+            <Avatar className="h-16 w-16 mx-auto sm:mx-0">
               <AvatarFallback className="text-lg">{initials}</AvatarFallback>
             </Avatar>
-            <div>
-              <h3 className="font-semibold text-text-primary text-xl">{candidate.name}</h3>
+            <div className="text-center sm:text-left">
+              <h3 className="font-semibold text-text-primary text-lg sm:text-xl">{candidate.name}</h3>
               <p className="text-sm text-text-secondary">{candidate.email}</p>
               <p className="text-sm text-text-secondary">{candidate.lastRoleTitle || 'Role not specified'}</p>
             </div>
@@ -70,7 +74,7 @@ export default function CandidateModal() {
           
           {/* Ranking Information */}
           {score && (
-            <div className="mb-6 grid grid-cols-2 gap-4">
+            <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Card className="bg-gray-50">
                 <CardContent className="p-4 text-center">
                   <div className={`text-2xl font-bold ${getScoreColor(score.totalScore || 0)}`}>
@@ -110,7 +114,7 @@ export default function CandidateModal() {
           )}
 
           {/* Experience & Skills */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
             <Card>
               <CardContent className="p-4">
                 <h4 className="font-semibold mb-3">Experience</h4>
@@ -121,7 +125,7 @@ export default function CandidateModal() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-text-secondary">Last Role</span>
-                    <span className="font-medium text-right max-w-[150px] truncate">
+                    <span className="font-medium text-right max-w-[120px] sm:max-w-[150px] truncate">
                       {candidate.lastRoleTitle || 'Not specified'}
                     </span>
                   </div>
@@ -187,11 +191,11 @@ export default function CandidateModal() {
           )}
 
           {/* Actions */}
-          <div className="flex space-x-3 pt-4 border-t">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-4 border-t">
             <Button
               onClick={() => toggleCandidateSelection(candidate.id)}
               variant={isShortlisted ? "default" : "outline"}
-              className={isShortlisted ? "bg-success hover:bg-green-600" : ""}
+              className={`w-full sm:w-auto ${isShortlisted ? "bg-success hover:bg-green-600" : ""}`}
             >
               {isShortlisted ? (
                 <>
@@ -206,12 +210,12 @@ export default function CandidateModal() {
               )}
             </Button>
             
-            <Button variant="outline">
+            <Button variant="outline" className="w-full sm:w-auto">
               <Download className="w-4 h-4 mr-2" />
               Download CV
             </Button>
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
