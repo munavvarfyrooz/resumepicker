@@ -60,17 +60,29 @@ export default function LeftSidebar() {
     mutationFn: async (jobId: number) => {
       return await apiRequest('DELETE', `/api/jobs/${jobId}`, {});
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/jobs', 'candidate-counts'] });
+    onSuccess: async (_, deletedJobId) => {
+      // Refresh job list first
+      await queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/jobs', 'candidate-counts'] });
+      
       toast({
         title: "Success",
         description: "Job deleted successfully",
       });
-      // Reset selected job if it was deleted
-      if (selectedJob) {
-        setSelectedJob(null);
-        setLocation('/');
+      
+      // If the deleted job was the selected one, switch to another available job
+      if (selectedJob?.id === deletedJobId) {
+        const updatedJobs = await queryClient.fetchQuery({ queryKey: ['/api/jobs'] });
+        if (updatedJobs && updatedJobs.length > 0) {
+          // Select the first available job
+          const firstJob = updatedJobs[0];
+          setSelectedJob(firstJob);
+          setLocation(`/jobs/${firstJob.id}`);
+        } else {
+          // No jobs left, go to dashboard
+          setSelectedJob(null);
+          setLocation('/');
+        }
       }
     },
     onError: () => {

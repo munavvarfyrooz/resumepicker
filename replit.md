@@ -123,4 +123,13 @@ The application requires the following environment variables:
 - `ENABLE_AI_EMBEDDINGS`: Feature flag for AI integration
 - `OPENAI_API_KEY`: For future AI features (optional)
 
+## Recent Changes
+
+### Latest Updates (July 20, 2025)
+- **AI-Powered Job Description Analysis**: Implemented automatic skill extraction from job descriptions using OpenAI GPT-4o
+- **Delete Functionality**: Added comprehensive delete capabilities for jobs and candidates with cascade deletion and smart auto-navigation
+- **Enhanced Mobile Experience**: Improved mobile responsiveness with proper scrolling and touch interactions
+- **Smart Job Navigation**: Auto-switching to available jobs when current job is deleted to prevent navigation errors
+
+### Deployment
 The system is built to scale horizontally with stateless backend services and can be deployed on platforms like Railway, Vercel, or traditional VPS environments.
