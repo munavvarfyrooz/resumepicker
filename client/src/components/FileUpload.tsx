@@ -29,7 +29,16 @@ export default function FileUpload() {
         formData.append('files', file);
       });
       
-      return await apiRequest('POST', '/api/upload', formData);
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+      
+      return response;
     },
     onSuccess: (response: any) => {
       queryClient.invalidateQueries({ queryKey: ['/api/candidates'] });
@@ -82,6 +91,11 @@ export default function FileUpload() {
       }
 
       const response = await uploadMutation.mutateAsync(acceptedFiles);
+      
+      if (!response.ok) {
+        throw new Error(`Upload failed with status: ${response.status}`);
+      }
+      
       const results: { results: UploadResult[] } = await response.json();
       
       // Update progress with final results

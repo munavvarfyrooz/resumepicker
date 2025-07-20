@@ -142,6 +142,10 @@ The application requires the following environment variables:
 - **Enhanced Mobile Experience**: Improved mobile responsiveness with proper scrolling and touch interactions
 - **Smart Job Navigation**: Auto-switching to available jobs when current job is deleted to prevent navigation errors
 - **Horizontal Table Scrolling**: Fixed table overflow and scrolling for viewing all ranking columns on smaller screens
+- **Shortlist Management System**: Added dedicated shortlist view with card-based layout, export functionality, and comprehensive candidate management
+- **CV Download Feature**: Implemented direct CV download preserving original file formats (PDF, DOCX, TXT) with proper error handling
+- **CSV Export Functionality**: Added shortlist export to CSV with comprehensive candidate data including scores, skills, and experience
+- **Bulk File Upload Improvements**: Enhanced file upload system to handle up to 20 files simultaneously with improved error handling and progress tracking
 
 ### Deployment
 The system is built to scale horizontally with stateless backend services and can be deployed on platforms like Railway, Vercel, or traditional VPS environments.

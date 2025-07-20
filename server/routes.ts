@@ -157,10 +157,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // File upload endpoint
-  app.post('/api/upload', upload.array('files', 10), async (req, res) => {
+  // File upload endpoint with error handling
+  app.post('/api/upload', (req, res, next) => {
+    upload.array('files', 20)(req, res, (err) => {
+      if (err instanceof multer.MulterError) {
+        console.error('Multer error:', err);
+        return res.status(400).json({ 
+          error: `Upload error: ${err.message}`,
+          code: err.code 
+        });
+      } else if (err) {
+        console.error('Upload error:', err);
+        return res.status(500).json({ error: 'File upload failed' });
+      }
+      next();
+    });
+  }, async (req, res) => {
     try {
+      console.log('Upload request received:', {
+        filesCount: req.files ? req.files.length : 0,
+        fieldName: req.files ? 'files array' : 'no files',
+        body: Object.keys(req.body)
+      });
+
       if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
+        console.error('No files in request:', { files: req.files, body: req.body });
         return res.status(400).json({ error: 'No files uploaded' });
       }
 
