@@ -230,7 +230,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Re-score all candidates
       for (const candidate of candidates) {
-        await ScoringEngine.scoreCandidate(candidate.id, jobId, weights);
+        const scoreBreakdown = await ScoringEngine.scoreCandidate(candidate.id, jobId, weights);
+        
+        const scoreData = {
+          candidateId: candidate.id,
+          jobId,
+          totalScore: scoreBreakdown.totalScore,
+          skillMatchScore: scoreBreakdown.skillMatchScore,
+          titleScore: scoreBreakdown.titleScore,
+          seniorityScore: scoreBreakdown.seniorityScore,
+          recencyScore: scoreBreakdown.recencyScore,
+          gapPenalty: scoreBreakdown.gapPenalty,
+          missingMustHave: scoreBreakdown.missingMustHave,
+          explanation: scoreBreakdown.explanation,
+          weights,
+        };
+
+        await storage.saveScore(scoreData);
       }
 
       res.json({ success: true, message: 'All candidates re-scored' });
