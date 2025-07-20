@@ -6,6 +6,7 @@ import { insertJobSchema, insertCandidateSchema, type ScoreWeights } from "@shar
 import { CVParser } from "./services/parsing";
 import { ScoringEngine } from "./services/scoring";
 import { FileStorage } from "./utils/fileStorage";
+import { JobAnalysisService } from "./services/jobAnalysis";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -90,6 +91,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(job);
     } catch (error) {
       res.status(400).json({ error: 'Invalid job data' });
+    }
+  });
+
+  // AI Analysis endpoint for extracting skills from job description
+  app.post('/api/jobs/analyze-skills', async (req, res) => {
+    try {
+      const { description } = req.body;
+      
+      if (!description || typeof description !== 'string') {
+        return res.status(400).json({ error: 'Job description is required' });
+      }
+
+      const analysis = await JobAnalysisService.extractSkillsFromJobDescription(description);
+      res.json(analysis);
+    } catch (error) {
+      console.error('Failed to analyze job description:', error);
+      res.status(500).json({ error: 'Failed to analyze job description' });
     }
   });
 

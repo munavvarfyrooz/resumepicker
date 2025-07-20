@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Plus, X } from "lucide-react";
+import { ArrowLeft, Save, Plus, X, Sparkles, Check, AlertCircle } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
@@ -27,6 +27,7 @@ export default function JDEditor() {
   const [newMustSkill, setNewMustSkill] = useState("");
   const [newNiceSkill, setNewNiceSkill] = useState("");
   const [previewMode, setPreviewMode] = useState(false);
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<any>(null);
 
   // Fetch job details
   const { data: job, isLoading } = useQuery({
@@ -49,6 +50,28 @@ export default function JDEditor() {
   }, [job, selectedJob, setSelectedJob]);
 
   // Save job mutation
+  // AI Analysis mutation
+  const analyzeSkillsMutation = useMutation({
+    mutationFn: async (description: string) => {
+      return await apiRequest('POST', '/api/jobs/analyze-skills', { description });
+    },
+    onSuccess: (response) => {
+      const analysis = response.json();
+      setAiAnalysisResult(analysis);
+      toast({
+        title: "AI Analysis Complete",
+        description: `Found ${analysis.mustHaveSkills.length} must-have and ${analysis.niceToHaveSkills.length} nice-to-have skills`,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Analysis Failed",
+        description: "Could not analyze job description. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const saveJobMutation = useMutation({
     mutationFn: async (jobData: any) => {
       const currentJob = job || selectedJob;
@@ -111,6 +134,30 @@ export default function JDEditor() {
 
   const removeNiceSkill = (skill: string) => {
     setNiceToHaveSkills(niceToHaveSkills.filter(s => s !== skill));
+  };
+
+  const handleAnalyzeSkills = () => {
+    if (!description.trim()) {
+      toast({
+        title: "No Description",
+        description: "Please write a job description first",
+        variant: "destructive",
+      });
+      return;
+    }
+    analyzeSkillsMutation.mutate(description);
+  };
+
+  const applyAISkills = () => {
+    if (aiAnalysisResult) {
+      setMustHaveSkills([...new Set([...mustHaveSkills, ...aiAnalysisResult.mustHaveSkills])]);
+      setNiceToHaveSkills([...new Set([...niceToHaveSkills, ...aiAnalysisResult.niceToHaveSkills])]);
+      setAiAnalysisResult(null);
+      toast({
+        title: "Skills Applied",
+        description: "AI-suggested skills have been added to your job requirements",
+      });
+    }
   };
 
   if (isLoading) {
@@ -196,8 +243,22 @@ export default function JDEditor() {
 
             {/* Skills */}
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle>Skills & Requirements</CardTitle>
+                <Button
+                  onClick={handleAnalyzeSkills}
+                  disabled={analyzeSkillsMutation.isPending || !description.trim()}
+                  size="sm"
+                  variant="outline"
+                  className="flex items-center space-x-2"
+                >
+                  {analyzeSkillsMutation.isPending ? (
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                  <span>AI Extract Skills</span>
+                </Button>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Must-have skills */}
@@ -253,6 +314,61 @@ export default function JDEditor() {
                     ))}
                   </div>
                 </div>
+
+                {/* AI Suggestions */}
+                {aiAnalysisResult && (
+                  <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <Sparkles className="w-5 h-5 text-blue-600" />
+                        <h3 className="font-medium text-blue-900 dark:text-blue-100">AI Skill Suggestions</h3>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button onClick={applyAISkills} size="sm" variant="default">
+                          <Check className="w-4 h-4 mr-1" />
+                          Apply All
+                        </Button>
+                        <Button onClick={() => setAiAnalysisResult(null)} size="sm" variant="outline">
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      {aiAnalysisResult.mustHaveSkills.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium text-red-700 dark:text-red-300 mb-2">Suggested Must-Have Skills:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {aiAnalysisResult.mustHaveSkills.map((skill: string) => (
+                              <Badge key={skill} variant="destructive" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {aiAnalysisResult.niceToHaveSkills.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Suggested Nice-to-Have Skills:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {aiAnalysisResult.niceToHaveSkills.map((skill: string) => (
+                              <Badge key={skill} variant="secondary" className="text-xs">
+                                {skill}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {aiAnalysisResult.reasoning && (
+                        <div className="text-xs text-gray-600 dark:text-gray-400 mt-2">
+                          <strong>AI Reasoning:</strong> {aiAnalysisResult.reasoning}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
