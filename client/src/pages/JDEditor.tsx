@@ -70,16 +70,22 @@ export default function JDEditor() {
       const analysis = response;
       setAiAnalysisResult(analysis);
       
-      // Update the skills arrays with AI results (avoiding duplicates)
+      // Update the skills arrays with AI results (avoiding duplicates with case-insensitive check)
       if (analysis.mustHaveSkills && Array.isArray(analysis.mustHaveSkills)) {
         setMustHaveSkills(prev => {
-          const newSkills = analysis.mustHaveSkills.filter(skill => !prev.includes(skill));
+          const prevLower = prev.map(skill => skill.toLowerCase());
+          const newSkills = analysis.mustHaveSkills.filter(skill => 
+            !prevLower.includes(skill.toLowerCase())
+          );
           return [...prev, ...newSkills];
         });
       }
       if (analysis.niceToHaveSkills && Array.isArray(analysis.niceToHaveSkills)) {
         setNiceToHaveSkills(prev => {
-          const newSkills = analysis.niceToHaveSkills.filter(skill => !prev.includes(skill));
+          const prevLower = prev.map(skill => skill.toLowerCase());
+          const newSkills = analysis.niceToHaveSkills.filter(skill => 
+            !prevLower.includes(skill.toLowerCase())
+          );
           return [...prev, ...newSkills];
         });
       }
