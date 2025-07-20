@@ -495,10 +495,11 @@ export default function RankingTable() {
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden md:block overflow-x-auto">
-        <div className="rounded-md border min-w-[1200px]">
-          <Table>
-            <TableHeader>
+      <div className="hidden md:block">
+        <div className="overflow-x-auto">
+          <div className="rounded-md border">
+            <Table className="min-w-[1400px]">
+              <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="bg-gray-50">
                   {headerGroup.headers.map((header) => (
@@ -533,8 +534,9 @@ export default function RankingTable() {
                   </TableCell>
                 </TableRow>
               )}
-            </TableBody>
-          </Table>
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </div>
     </div>

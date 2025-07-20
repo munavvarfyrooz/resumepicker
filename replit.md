@@ -58,15 +58,25 @@ The PostgreSQL database contains the following main entities:
 5. Candidate record is created with normalized data
 6. Skills are stored in separate table for efficient querying
 
-### Scoring Algorithm
-The system uses a weighted scoring approach with five main components:
+### Dual Ranking System
+The system provides two distinct ranking approaches:
+
+#### Manual Rank (Algorithmic Scoring)
+A weighted scoring approach with five main components:
 - **Skills Match (50% default)**: Evaluates required vs nice-to-have skills alignment
 - **Title Relevance (20% default)**: Job title similarity analysis
 - **Seniority Level (15% default)**: Experience level assessment based on years
 - **Recency (10% default)**: How recent the candidate's work activity is
 - **Gap Penalty (5% default)**: Deduction for employment gaps
 
-Scores are calculated in real-time and can be re-calculated when weights are adjusted.
+#### AI Rank (OpenAI-Powered Intelligence)
+- **GPT-4o Analysis**: Uses advanced AI to evaluate candidates holistically
+- **Technical Fit Assessment**: Considers both hard skills and soft indicators
+- **Contextual Understanding**: Balances algorithmic scores with human insights
+- **Reasoning Provided**: Each AI ranking includes explanation for the decision
+- **Experience-Weighted**: Factors in role requirements, seniority, and career progression
+
+Both ranking systems can be calculated independently and compared for comprehensive candidate evaluation.
 
 ### Job Description Processing
 1. Markdown-based job descriptions are created in the editor
@@ -126,11 +136,12 @@ The application requires the following environment variables:
 ## Recent Changes
 
 ### Latest Updates (July 20, 2025)
+- **Dual Ranking System**: Implemented Manual Rank (algorithmic scoring) and AI Rank (OpenAI-powered intelligent analysis) with separate columns and dedicated buttons
 - **AI-Powered Job Description Analysis**: Implemented automatic skill extraction from job descriptions using OpenAI GPT-4o with proper duplicate prevention
 - **Delete Functionality**: Added comprehensive delete capabilities for jobs and candidates with cascade deletion and smart auto-navigation
 - **Enhanced Mobile Experience**: Improved mobile responsiveness with proper scrolling and touch interactions
 - **Smart Job Navigation**: Auto-switching to available jobs when current job is deleted to prevent navigation errors
-- **Skill Extraction Fix**: Resolved frontend response parsing issue for AI skill extraction functionality
+- **Horizontal Table Scrolling**: Fixed table overflow and scrolling for viewing all ranking columns on smaller screens
 
 ### Deployment
 The system is built to scale horizontally with stateless backend services and can be deployed on platforms like Railway, Vercel, or traditional VPS environments.
