@@ -34,7 +34,7 @@ export default function FilterBar() {
   ).sort();
 
   const handleMinYearsChange = (value: string) => {
-    setFilters({ minYears: value ? parseInt(value) : null });
+    setFilters({ minYears: value === "any" ? null : parseInt(value) });
   };
 
   const handleSkillAdd = (skill: string) => {
@@ -81,12 +81,12 @@ export default function FilterBar() {
         {/* Min Years Filter */}
         <div className="flex items-center space-x-2">
           <Label className="text-sm text-text-secondary whitespace-nowrap">Min Years:</Label>
-          <Select value={filters.minYears?.toString() || ""} onValueChange={handleMinYearsChange}>
+          <Select value={filters.minYears?.toString() || "any"} onValueChange={handleMinYearsChange}>
             <SelectTrigger className="w-20 h-8">
               <SelectValue placeholder="Any" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any</SelectItem>
+              <SelectItem value="any">Any</SelectItem>
               <SelectItem value="1">1+</SelectItem>
               <SelectItem value="2">2+</SelectItem>
               <SelectItem value="3">3+</SelectItem>

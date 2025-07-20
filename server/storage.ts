@@ -38,7 +38,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createJob(job: InsertJob): Promise<Job> {
-    const insertData = {
+    const insertData: any = {
       title: job.title,
       description: job.description,
       requirements: job.requirements || { must: [], nice: [] },
@@ -73,7 +73,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createCandidate(candidate: InsertCandidate): Promise<Candidate> {
-    const candidateData = {
+    const candidateData: any = {
       name: candidate.name,
       email: candidate.email,
       fileName: candidate.fileName,
@@ -156,7 +156,7 @@ export class DatabaseStorage implements IStorage {
     // Check if score exists
     const existing = await this.getScore(score.candidateId, score.jobId);
     
-    const scoreData = {
+    const scoreData: any = {
       candidateId: score.candidateId,
       jobId: score.jobId,
       totalScore: score.totalScore,
