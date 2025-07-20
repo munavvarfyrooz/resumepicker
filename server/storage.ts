@@ -211,6 +211,16 @@ export class DatabaseStorage implements IStorage {
       .where(eq(scores.jobId, jobId));
   }
 
+  async updateScoreAIRanking(candidateId: number, jobId: number, aiRank: number, aiRankReason: string): Promise<void> {
+    await db
+      .update(scores)
+      .set({
+        aiRank,
+        aiRankReason,
+      })
+      .where(and(eq(scores.candidateId, candidateId), eq(scores.jobId, jobId)));
+  }
+
   async getCandidateCountsByJob(): Promise<Record<number, number>> {
     // Get all candidates with scores grouped by job
     const allJobs = await this.getJobs();

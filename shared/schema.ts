@@ -74,6 +74,9 @@ export const scores = pgTable("scores", {
     recency: number;
     gaps: number;
   }>().notNull(),
+  manualRank: integer("manual_rank"), // Manual ranking position
+  aiRank: integer("ai_rank"), // AI-generated ranking position  
+  aiRankReason: text("ai_rank_reason"), // AI explanation for ranking
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

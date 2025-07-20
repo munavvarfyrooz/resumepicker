@@ -162,7 +162,7 @@ export default function RankingTable() {
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           className="h-auto p-0 font-medium"
         >
-          Total Score
+          Manual Rank
           {column.getIsSorted() === 'asc' ? (
             <ArrowUp className="ml-2 h-4 w-4" />
           ) : column.getIsSorted() === 'desc' ? (
@@ -299,6 +299,51 @@ export default function RankingTable() {
         }
         
         return <Badge variant="outline" className="text-warning">{totalMonths} months</Badge>;
+      },
+    },
+    {
+      id: 'aiRank',
+      accessorFn: (row) => row.score?.aiRank || 0,
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          className="h-auto p-0 font-medium"
+        >
+          AI Rank
+          {column.getIsSorted() === 'asc' ? (
+            <ArrowUp className="ml-2 h-4 w-4" />
+          ) : column.getIsSorted() === 'desc' ? (
+            <ArrowDown className="ml-2 h-4 w-4" />
+          ) : (
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          )}
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const aiRank = row.original.score?.aiRank;
+        const aiReason = row.original.score?.aiRankReason;
+        
+        if (!aiRank) {
+          return <span className="text-gray-400 text-sm">Not ranked</span>;
+        }
+
+        return (
+          <div className="flex items-center space-x-2">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${
+              aiRank <= 3 ? 'bg-green-100 text-green-800' : 
+              aiRank <= 6 ? 'bg-yellow-100 text-yellow-800' : 
+              'bg-red-100 text-red-800'
+            }`}>
+              #{aiRank}
+            </div>
+            {aiReason && (
+              <div className="text-xs text-gray-500 max-w-[200px] truncate" title={aiReason}>
+                {aiReason}
+              </div>
+            )}
+          </div>
+        );
       },
     },
     {

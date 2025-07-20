@@ -9,7 +9,7 @@ import FilterBar from "@/components/FilterBar";
 import ScoreWeightsModal from "@/components/ScoreWeightsModal";
 import JDEditor from "./JDEditor";
 import { Button } from "@/components/ui/button";
-import { Settings, Download, Briefcase, Loader2 } from "lucide-react";
+import { Settings, Download, Briefcase, Loader2, Brain } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -84,6 +84,7 @@ export default function Dashboard() {
   };
 
   const [isCalculatingScores, setIsCalculatingScores] = useState(false);
+  const [isAIRanking, setIsAIRanking] = useState(false);
   const { toast } = useToast();
 
   const handleCalculateScores = async () => {
@@ -123,6 +124,38 @@ export default function Dashboard() {
       });
     } finally {
       setIsCalculatingScores(false);
+    }
+  };
+
+  const handleAIRanking = async () => {
+    if (!selectedJob || isAIRanking) return;
+
+    setIsAIRanking(true);
+    
+    toast({
+      title: "AI Ranking in Progress",
+      description: "OpenAI is analyzing candidates and generating intelligent rankings...",
+    });
+
+    try {
+      await apiRequest('POST', `/api/jobs/${selectedJob.id}/ai-rank`);
+      
+      // Invalidate and refetch candidates data
+      queryClient.invalidateQueries({ queryKey: ['/api/jobs', selectedJob.id, 'candidates'] });
+      
+      toast({
+        title: "AI Ranking Complete",
+        description: "Intelligent rankings have been generated using OpenAI analysis",
+      });
+    } catch (error) {
+      console.error('Failed to generate AI rankings:', error);
+      toast({
+        title: "AI Ranking Failed",
+        description: "Unable to generate AI rankings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAIRanking(false);
     }
   };
 
@@ -213,10 +246,30 @@ export default function Dashboard() {
                   <Settings className="w-3 h-3 md:w-4 md:h-4 mr-1" />
                 )}
                 <span className="hidden sm:inline">
-                  {isCalculatingScores ? "Calculating..." : "Calculate Scores"}
+                  {isCalculatingScores ? "Calculating..." : "Manual Rank"}
                 </span>
                 <span className="sm:hidden">
-                  {isCalculatingScores ? "Calc..." : "Calc"}
+                  {isCalculatingScores ? "Calc..." : "Manual"}
+                </span>
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAIRanking}
+                disabled={isAIRanking}
+                className="text-xs md:text-sm bg-gradient-to-r from-purple-50 to-blue-50 hover:from-purple-100 hover:to-blue-100 border-purple-200"
+              >
+                {isAIRanking ? (
+                  <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1 animate-spin" />
+                ) : (
+                  <Brain className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                )}
+                <span className="hidden sm:inline">
+                  {isAIRanking ? "AI Ranking..." : "AI Rank"}
+                </span>
+                <span className="sm:hidden">
+                  {isAIRanking ? "AI..." : "AI"}
                 </span>
               </Button>
               

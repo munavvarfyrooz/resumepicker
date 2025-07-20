@@ -371,6 +371,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return match ? match[0] : null;
   }
 
+  // Generate AI rankings for candidates
+  app.post('/api/jobs/:jobId/ai-rank', async (req, res) => {
+    try {
+      const jobId = parseInt(req.params.jobId);
+      const { AIRankingService } = await import('./services/aiRanking');
+      const rankings = await AIRankingService.rankCandidatesForJob(jobId);
+      
+      if (rankings.length > 0) {
+        await AIRankingService.saveAIRankings(jobId, rankings);
+      }
+      
+      res.json({ success: true, rankings });
+    } catch (error) {
+      console.error('AI ranking error:', error);
+      res.status(500).json({ error: 'Failed to generate AI rankings' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
