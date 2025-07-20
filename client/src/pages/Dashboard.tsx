@@ -32,36 +32,36 @@ export default function Dashboard() {
   } = useAppStore();
 
   // Fetch jobs
-  const { data: jobs } = useQuery({
+  const { data: jobs = [] } = useQuery({
     queryKey: ['/api/jobs'],
-    select: (data) => data || [],
+    select: (data: any) => Array.isArray(data) ? data : [],
   });
 
   // Fetch candidates for selected job
-  const { data: jobCandidates, isLoading: candidatesLoading } = useQuery({
+  const { data: jobCandidates = [], isLoading: candidatesLoading } = useQuery({
     queryKey: ['/api/jobs', selectedJob?.id, 'candidates'],
     enabled: !!selectedJob,
-    select: (data) => data || [],
+    select: (data: any) => Array.isArray(data) ? data : [],
   });
 
   // Set initial job if ID in URL
   useEffect(() => {
-    if (params.id && jobs) {
-      const job = jobs.find((j: any) => j.id === parseInt(params.id));
+    if (params.id && Array.isArray(jobs) && jobs.length > 0) {
+      const job = jobs.find((j: any) => j.id === parseInt(params.id!));
       if (job) {
         setSelectedJob(job);
       }
-    } else if (jobs && jobs.length > 0 && !selectedJob) {
+    } else if (Array.isArray(jobs) && jobs.length > 0) {
       setSelectedJob(jobs[0]);
     }
-  }, [params.id, jobs, selectedJob, setSelectedJob]);
+  }, [params.id, JSON.stringify(jobs)]);
 
   // Update candidates when data changes
   useEffect(() => {
-    if (jobCandidates) {
+    if (Array.isArray(jobCandidates) && jobCandidates.length >= 0) {
       setCandidates(jobCandidates);
     }
-  }, [jobCandidates, setCandidates]);
+  }, [JSON.stringify(jobCandidates)]);
 
   const handleExportShortlist = async () => {
     if (!selectedJob || selectedCandidateIds.length === 0) return;
