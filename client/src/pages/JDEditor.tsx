@@ -30,28 +30,30 @@ export default function JDEditor() {
 
   // Fetch job details
   const { data: job, isLoading } = useQuery({
-    queryKey: ['/api/jobs', params.id],
-    enabled: !!params.id,
+    queryKey: ['/api/jobs', selectedJob?.id || params.id],
+    enabled: !!(selectedJob?.id || params.id),
   });
 
   // Initialize form when job loads
   useEffect(() => {
-    if (job) {
-      setSelectedJob(job);
-      setTitle(job.title || "");
-      setDescription(job.description || "");
-      if (job.requirements) {
-        setMustHaveSkills(job.requirements.must || []);
-        setNiceToHaveSkills(job.requirements.nice || []);
+    const currentJob = job || selectedJob;
+    if (currentJob) {
+      if (!selectedJob) setSelectedJob(currentJob);
+      setTitle(currentJob.title || "");
+      setDescription(currentJob.description || "");
+      if (currentJob.requirements) {
+        setMustHaveSkills(currentJob.requirements.must || []);
+        setNiceToHaveSkills(currentJob.requirements.nice || []);
       }
     }
-  }, [job, setSelectedJob]);
+  }, [job, selectedJob, setSelectedJob]);
 
   // Save job mutation
   const saveJobMutation = useMutation({
     mutationFn: async (jobData: any) => {
-      if (job?.id) {
-        return await apiRequest('PUT', `/api/jobs/${job.id}`, jobData);
+      const currentJob = job || selectedJob;
+      if (currentJob?.id) {
+        return await apiRequest('PUT', `/api/jobs/${currentJob.id}`, jobData);
       } else {
         return await apiRequest('POST', '/api/jobs', jobData);
       }

@@ -7,6 +7,7 @@ import RankingTable from "@/components/RankingTable";
 import CandidateDrawer from "@/components/CandidateDrawer";
 import FilterBar from "@/components/FilterBar";
 import ScoreWeightsModal from "@/components/ScoreWeightsModal";
+import JDEditor from "./JDEditor";
 import { Button } from "@/components/ui/button";
 import { Settings, Download } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -193,6 +194,12 @@ export default function Dashboard() {
               )}
             </div>
           </>
+        )}
+
+        {view === 'jd-editor' && (
+          <div className="flex-1 overflow-hidden">
+            <JDEditor />
+          </div>
         )}
       </div>
 

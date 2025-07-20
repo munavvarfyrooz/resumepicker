@@ -25,6 +25,9 @@ export interface IStorage {
   getScore(candidateId: number, jobId: number): Promise<Score | undefined>;
   saveScore(score: InsertScore): Promise<Score>;
   updateScoreWeights(jobId: number, weights: ScoreWeights): Promise<void>;
+  
+  // Utility methods
+  getCandidateCountsByJob(): Promise<Record<number, number>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -186,6 +189,23 @@ export class DatabaseStorage implements IStorage {
     await db.update(scores)
       .set({ weights })
       .where(eq(scores.jobId, jobId));
+  }
+
+  async getCandidateCountsByJob(): Promise<Record<number, number>> {
+    const result = await db.execute(`
+      SELECT 
+        j.id as job_id,
+        COUNT(s.candidate_id) as candidate_count
+      FROM jobs j
+      LEFT JOIN scores s ON j.id = s.job_id
+      GROUP BY j.id
+    `);
+    
+    const counts: Record<number, number> = {};
+    for (const row of result) {
+      counts[Number(row.job_id)] = Number(row.candidate_count) || 0;
+    }
+    return counts;
   }
 }
 

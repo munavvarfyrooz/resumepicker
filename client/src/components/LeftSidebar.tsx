@@ -62,11 +62,11 @@ export default function LeftSidebar() {
     }
   };
 
-  const getCandidateCount = (jobId: number) => {
-    // This would be fetched from the API in a real implementation
-    // For now, return a placeholder
-    return Math.floor(Math.random() * 50);
-  };
+  // Fetch candidate counts for all jobs
+  const { data: candidateCounts = {} } = useQuery({
+    queryKey: ['/api/jobs', 'candidate-counts'],
+    select: (data) => data || {},
+  });
 
   return (
     <div className="w-80 bg-surface border-r border-border flex flex-col">
@@ -99,7 +99,7 @@ export default function LeftSidebar() {
           <div className="space-y-1">
             {jobs.map((job: any) => {
               const status = getJobStatus(job.status);
-              const candidateCount = getCandidateCount(job.id);
+              const candidateCount = candidateCounts[job.id] || 0;
               const isSelected = selectedJob?.id === job.id;
               
               return (
