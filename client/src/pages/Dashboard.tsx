@@ -6,6 +6,7 @@ import LeftSidebar from "@/components/LeftSidebar";
 import RankingTable from "@/components/RankingTable";
 import CandidateDrawer from "@/components/CandidateDrawer";
 import CandidateModal from "@/components/CandidateModal";
+import ShortlistView from "@/components/ShortlistView";
 import FilterBar from "@/components/FilterBar";
 import ScoreWeightsModal from "@/components/ScoreWeightsModal";
 import JDEditor from "./JDEditor";
@@ -217,6 +218,19 @@ export default function Dashboard() {
               Ranking
             </Button>
             <Button
+              variant={view === 'shortlist' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setView('shortlist')}
+              className="relative"
+            >
+              Shortlist
+              {selectedCandidateIds.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-success text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {selectedCandidateIds.length}
+                </span>
+              )}
+            </Button>
+            <Button
               variant={view === 'jd-editor' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setView('jd-editor')}
@@ -266,6 +280,19 @@ export default function Dashboard() {
                   onClick={() => setView('ranking')}
                 >
                   Ranking
+                </Button>
+                <Button
+                  variant={view === 'shortlist' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setView('shortlist')}
+                  className="relative"
+                >
+                  Shortlist
+                  {selectedCandidateIds.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-success text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {selectedCandidateIds.length}
+                    </span>
+                  )}
                 </Button>
                 <Button
                   variant={view === 'jd-editor' ? 'default' : 'outline'}
@@ -409,6 +436,12 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {view === 'shortlist' && (
+          <div className="flex-1 overflow-hidden">
+            <ShortlistView />
           </div>
         )}
 

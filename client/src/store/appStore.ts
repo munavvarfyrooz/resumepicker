@@ -15,12 +15,12 @@ interface AppState {
   setSelectedCandidate: (candidate: CandidateWithScore | null) => void;
   
   // UI State
-  view: 'ranking' | 'jd-editor';
+  view: 'ranking' | 'shortlist' | 'jd-editor';
   candidateDrawerOpen: boolean;
   weightsModalOpen: boolean;
   selectedCandidateIds: number[];
   sidebarCollapsed: boolean;
-  setView: (view: 'ranking' | 'jd-editor') => void;
+  setView: (view: 'ranking' | 'shortlist' | 'jd-editor') => void;
   setCandidateDrawerOpen: (open: boolean) => void;
   setWeightsModalOpen: (open: boolean) => void;
   setSelectedCandidateIds: (ids: number[]) => void;
