@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAppStore } from "@/store/appStore";
@@ -9,8 +9,9 @@ import FilterBar from "@/components/FilterBar";
 import ScoreWeightsModal from "@/components/ScoreWeightsModal";
 import JDEditor from "./JDEditor";
 import { Button } from "@/components/ui/button";
-import { Settings, Download, Briefcase } from "lucide-react";
+import { Settings, Download, Briefcase, Loader2 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const params = useParams();
@@ -82,8 +83,18 @@ export default function Dashboard() {
     }
   };
 
+  const [isCalculatingScores, setIsCalculatingScores] = useState(false);
+  const { toast } = useToast();
+
   const handleCalculateScores = async () => {
-    if (!selectedJob) return;
+    if (!selectedJob || isCalculatingScores) return;
+
+    setIsCalculatingScores(true);
+    
+    toast({
+      title: "Calculating Scores",
+      description: "Processing candidate rankings with AI analysis...",
+    });
 
     try {
       await apiRequest('POST', `/api/jobs/${selectedJob.id}/rescore`, {
@@ -98,8 +109,20 @@ export default function Dashboard() {
       
       // Invalidate and refetch candidates data
       queryClient.invalidateQueries({ queryKey: ['/api/jobs', selectedJob.id, 'candidates'] });
+      
+      toast({
+        title: "Scores Updated",
+        description: "All candidate rankings have been recalculated successfully",
+      });
     } catch (error) {
       console.error('Failed to calculate scores:', error);
+      toast({
+        title: "Calculation Failed",
+        description: "Unable to calculate scores. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCalculatingScores(false);
     }
   };
 
@@ -181,11 +204,20 @@ export default function Dashboard() {
                 variant="outline"
                 size="sm"
                 onClick={handleCalculateScores}
+                disabled={isCalculatingScores}
                 className="text-xs md:text-sm"
               >
-                <Settings className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                <span className="hidden sm:inline">Calculate Scores</span>
-                <span className="sm:hidden">Calc</span>
+                {isCalculatingScores ? (
+                  <Loader2 className="w-3 h-3 md:w-4 md:h-4 mr-1 animate-spin" />
+                ) : (
+                  <Settings className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                )}
+                <span className="hidden sm:inline">
+                  {isCalculatingScores ? "Calculating..." : "Calculate Scores"}
+                </span>
+                <span className="sm:hidden">
+                  {isCalculatingScores ? "Calc..." : "Calc"}
+                </span>
               </Button>
               
               <Button
@@ -225,9 +257,14 @@ export default function Dashboard() {
                 variant="outline"
                 size="sm"
                 onClick={handleCalculateScores}
+                disabled={isCalculatingScores}
                 className="text-xs px-2"
               >
-                <Settings className="w-3 h-3" />
+                {isCalculatingScores ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <Settings className="w-3 h-3" />
+                )}
               </Button>
               <Button
                 variant="outline"
