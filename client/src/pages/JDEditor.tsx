@@ -56,7 +56,8 @@ export default function JDEditor() {
       return await apiRequest('POST', '/api/jobs/analyze-skills', { description });
     },
     onSuccess: (response) => {
-      const analysis = response.json();
+      // The response is already parsed JSON from apiRequest
+      const analysis = response;
       setAiAnalysisResult(analysis);
       const mustCount = analysis.mustHaveSkills?.length || 0;
       const niceCount = analysis.niceToHaveSkills?.length || 0;
