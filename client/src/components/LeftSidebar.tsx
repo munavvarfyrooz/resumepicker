@@ -122,7 +122,7 @@ export default function LeftSidebar() {
             <Briefcase className="w-5 h-5 text-white" />
           </div>
           {!sidebarCollapsed && (
-            <h1 className="text-xl font-semibold text-text-primary">TalentMatch</h1>
+            <h1 className="text-xl font-semibold text-text-primary">SmartHire</h1>
           )}
         </div>
       </div>
@@ -219,7 +219,7 @@ export default function LeftSidebar() {
         {/* Upload Section */}
         <div className="p-4 border-t border-border">
           <h2 className="text-sm font-medium text-text-secondary uppercase tracking-wider mb-3">
-            Upload CVs
+            Upload Resumes
           </h2>
           <FileUpload />
         </div>

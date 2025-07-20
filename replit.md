@@ -1,8 +1,8 @@
-# TalentMatch - CV Ranking & JD Matching Platform
+# SmartHire - CV Ranking & JD Matching Platform
 
 ## Overview
 
-TalentMatch is an intelligent CV ranking and job description matching system built with a modern full-stack architecture. The platform enables recruiters to upload CVs in bulk, create job descriptions, and automatically rank candidates using a configurable transparent scoring algorithm.
+SmartHire is an intelligent CV ranking and job description matching system built with a modern full-stack architecture. The platform enables recruiters to upload CVs in bulk, create job descriptions, and automatically rank candidates using a configurable transparent scoring algorithm.
 
 ## User Preferences
 

@@ -1,8 +1,8 @@
-# TalentMatch - CV Ranking & JD Matching Platform
+# SmartHire - CV Ranking & JD Matching Platform
 
 An intelligent CV ranking and job description matching system with transparent scoring, built using React, Express, TypeScript, and PostgreSQL.
 
-![TalentMatch Screenshot](https://via.placeholder.com/800x400/2563EB/FFFFFF?text=TalentMatch+Dashboard)
+![SmartHire Screenshot](https://via.placeholder.com/800x400/2563EB/FFFFFF?text=SmartHire+Dashboard)
 
 ## 🚀 Features
 
@@ -69,8 +69,8 @@ An intelligent CV ranking and job description matching system with transparent s
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd talentmatch
+   git clone https://github.com/munavvarfyrooz/smarthire.git
+   cd smarthire
    ```
 
 2. **Install dependencies**
@@ -81,7 +81,7 @@ An intelligent CV ranking and job description matching system with transparent s
 3. **Set up environment variables**
    ```bash
    # Database configuration (these are automatically provided in deployment)
-   DATABASE_URL=postgresql://username:password@localhost:5432/talentmatch
+   DATABASE_URL=postgresql://username:password@localhost:5432/smarthire
    
    # Optional: Enable AI features (requires OpenAI API key)
    ENABLE_AI_EMBEDDINGS=false
