@@ -1,0 +1,37 @@
+You are an expert full-stack engineer. Generate an MVP project with:
+STACK:
+- Frontend: React (Vite), TypeScript, Tailwind, Zustand state, TanStack Table, react-dropzone, react-markdown.
+- Backend: Node.js + Express + TypeScript.
+- DB: PostgreSQL with migration setup (e.g. drizzle or knex; choose drizzle for simplicity) and pgvector extension optional.
+- Parsing libs: pdf-parse, mammoth (docx), date-fns.
+- Embeddings placeholder module (abstract; actual OpenAI call behind a flag).
+GOAL:
+An intelligent CV ranking & JD matching MVP (Notion-like theme) with transparent scoring.
+FEATURES (Implement now):
+1. Bulk upload CVs (PDF, DOCX, TXT). Store original file, extracted text.
+2. JD Editor page (markdown) -> parse skills (detect "must"/"nice").
+3. Extraction pipeline (skills, years_experience, last_role_title, gaps).
+4. Scoring endpoint: returns per candidate scores + breakdown JSON (skill_match_score, title_score, seniority_score, penalties, missing_must, explanation).
+5. Explanation generation: simple deterministic text (NO live LLM call; just template).
+6. Ranking dashboard: sortable table with columns (Candidate, Total Score, Skill %, Missing Must, Years Exp, Last Role, Gaps).
+7. Filters: min years experience, has no missing must, includes skill (multi).
+8. Weight config (JSON editable in UI) -> re-score on change.
+9. Candidate detail drawer: sections (Summary, Matched Skills, Missing Critical, Experience Timeline).
+10. Export shortlist (selected candidates) to CSV.
+ARCHITECTURE:
+- `server/src` modules: `ingest/`, `parse/`, `score/`, `routes/`.
+- Provide a `ScoreWeights` interface; default weights (w1 skill=0.5, w2 title=0.2, w3 seniority=0.15, w4 recency=0.1, w5 gap=0.05).
+- Use pg schema from provided migrations (candidates, candidate_skills, jobs, job_skills, scores).
+- Provide seed script with sample CV texts and 1 sample JD.
+NOTION-LIKE UI:
+- Clean light theme, left sidebar (Jobs + Upload), main content (Ranking table or JD editor), right drawer (Candidate detail).
+- Tailwind utility classes; minimal custom CSS.
+COMMANDS:
+- Provide npm scripts: `dev` (concurrently runs server & client), `migrate`, `seed`.
+TESTING:
+- Include a few unit tests for scoring function (Jest).
+DELIVERABLES:
+- All code files.
+- Clear README with run instructions inside repo root.
+DO NOT include secrets. Abstract any future LLM calls in `services/embeddings.ts` with a mock returning fixed vectors.
+Return the full file tree and representative file contents (not ellipsized for core logic).
