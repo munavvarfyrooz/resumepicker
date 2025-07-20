@@ -394,7 +394,6 @@ export default function RankingTable() {
                 key={candidate.id}
                 className="bg-white rounded-lg p-4 border shadow-sm cursor-pointer hover:shadow-md transition-shadow"
                 onClick={() => setSelectedCandidate(candidate)}
-                onClick={() => setSelectedCandidate(candidate)}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-3">
@@ -497,9 +496,9 @@ export default function RankingTable() {
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden md:block flex-1">
-        <div className="w-full h-full overflow-x-auto overflow-y-auto border rounded-md bg-white">
-          <Table className="min-w-[1600px] w-full">
+      <div className="hidden md:block flex-1 overflow-hidden">
+        <div className="w-full h-full overflow-auto border rounded-md bg-white">
+          <Table className="min-w-[1800px] w-full table-fixed">
               <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="bg-gray-50">

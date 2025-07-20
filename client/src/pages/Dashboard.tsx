@@ -24,6 +24,7 @@ export default function Dashboard() {
     weightsModalOpen,
     setWeightsModalOpen,
     selectedCandidateIds,
+    selectedCandidate,
     view,
     setView,
     sidebarCollapsed,
@@ -364,9 +365,9 @@ export default function Dashboard() {
         </div>
 
         {view === 'ranking' && (
-          <div className="flex-1 flex flex-col h-full">
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
             <FilterBar />
-            <div className="flex-1 h-full min-h-0">
+            <div className="flex-1 h-full min-h-0 overflow-hidden">
               {candidatesLoading ? (
                 <div className="flex items-center justify-center h-full min-h-[200px]">
                   <div className="text-center">
@@ -375,7 +376,16 @@ export default function Dashboard() {
                   </div>
                 </div>
               ) : (
-                <RankingTable />
+                <div className="flex h-full">
+                  <div className="flex-1 overflow-hidden">
+                    <RankingTable />
+                  </div>
+                  {selectedCandidate && (
+                    <div className="w-96 flex-shrink-0">
+                      <CandidateDrawer />
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -388,7 +398,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {candidateDrawerOpen && <CandidateDrawer />}
+
       {weightsModalOpen && <ScoreWeightsModal />}
     </div>
   );
