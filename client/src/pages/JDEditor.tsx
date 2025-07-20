@@ -56,9 +56,18 @@ export default function JDEditor() {
       return await apiRequest('POST', '/api/jobs/analyze-skills', { description });
     },
     onSuccess: (response) => {
-      // The response is already parsed JSON from apiRequest
+      console.log('AI Analysis Response:', response); // Debug log
       const analysis = response;
       setAiAnalysisResult(analysis);
+      
+      // Update the skills arrays with AI results
+      if (analysis.mustHaveSkills && Array.isArray(analysis.mustHaveSkills)) {
+        setMustHaveSkills(prev => [...new Set([...prev, ...analysis.mustHaveSkills])]);
+      }
+      if (analysis.niceToHaveSkills && Array.isArray(analysis.niceToHaveSkills)) {
+        setNiceToHaveSkills(prev => [...new Set([...prev, ...analysis.niceToHaveSkills])]);
+      }
+      
       const mustCount = analysis.mustHaveSkills?.length || 0;
       const niceCount = analysis.niceToHaveSkills?.length || 0;
       toast({
