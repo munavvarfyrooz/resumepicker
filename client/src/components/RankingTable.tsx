@@ -224,14 +224,16 @@ export default function RankingTable() {
         const missing = row.original.score?.missingMustHave || [];
         
         if (missing.length === 0) {
-          return <Badge variant="default" className="bg-success">None</Badge>;
+          return <Badge variant="default" className="bg-green-100 text-green-800 border-green-200">None</Badge>;
         }
         
         return (
-          <Badge variant="destructive" className="bg-danger">
-            {missing.slice(0, 2).join(', ')}
-            {missing.length > 2 && ` +${missing.length - 2}`}
-          </Badge>
+          <div className="max-w-[150px]">
+            <Badge variant="destructive" className="bg-red-100 text-red-800 border-red-200 whitespace-normal">
+              {missing.slice(0, 1).join(', ')}
+              {missing.length > 1 && ` +${missing.length - 1} more`}
+            </Badge>
+          </div>
         );
       },
     },
@@ -449,8 +451,9 @@ export default function RankingTable() {
 
       {/* Desktop Table View */}
       <div className="hidden md:block">
-        <div className="rounded-md border overflow-x-auto">
-          <Table>
+        <div className="rounded-md border">
+          <div className="overflow-x-auto">
+            <Table className="min-w-[1200px]">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="bg-gray-50">
@@ -487,7 +490,8 @@ export default function RankingTable() {
                 </TableRow>
               )}
             </TableBody>
-          </Table>
+            </Table>
+          </div>
         </div>
       </div>
     </div>
