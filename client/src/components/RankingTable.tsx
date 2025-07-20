@@ -112,7 +112,8 @@ export default function RankingTable() {
         />
       ),
       enableSorting: false,
-      size: 50,
+      size: 40,
+      maxSize: 40,
     },
     {
       accessorKey: 'name',
@@ -153,6 +154,8 @@ export default function RankingTable() {
           </div>
         );
       },
+      size: 200,
+      maxSize: 250,
     },
     {
       id: 'totalScore',
@@ -194,6 +197,8 @@ export default function RankingTable() {
           </div>
         );
       },
+      size: 120,
+      maxSize: 140,
     },
     {
       id: 'aiRank',
@@ -239,6 +244,8 @@ export default function RankingTable() {
           </div>
         );
       },
+      size: 280,
+      maxSize: 320,
     },
     {
       id: 'skillMatch',
@@ -261,6 +268,8 @@ export default function RankingTable() {
           </div>
         );
       },
+      size: 120,
+      maxSize: 140,
     },
     {
       id: 'missingMust',
@@ -282,6 +291,8 @@ export default function RankingTable() {
           </div>
         );
       },
+      size: 100,
+      maxSize: 120,
     },
     {
       id: 'titleMatch',
@@ -304,6 +315,8 @@ export default function RankingTable() {
           </div>
         );
       },
+      size: 100,
+      maxSize: 120,
     },
     {
       accessorKey: 'yearsExperience',
@@ -319,6 +332,8 @@ export default function RankingTable() {
           </div>
         );
       },
+      size: 90,
+      maxSize: 110,
     },
     {
       accessorKey: 'lastRoleTitle',
@@ -327,6 +342,8 @@ export default function RankingTable() {
         const role = row.original.lastRoleTitle;
         return <span className="text-text-primary">{role || 'Not specified'}</span>;
       },
+      size: 150,
+      maxSize: 180,
     },
     {
       id: 'gaps',
@@ -498,7 +515,7 @@ export default function RankingTable() {
       {/* Desktop Table View */}
       <div className="hidden md:block flex-1 overflow-hidden">
         <div className="w-full h-full overflow-auto border rounded-md bg-white">
-          <Table className="min-w-[1800px] w-full table-fixed">
+          <Table className="min-w-[1400px] w-full">
               <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="bg-gray-50">
