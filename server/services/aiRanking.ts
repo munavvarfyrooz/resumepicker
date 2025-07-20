@@ -33,7 +33,7 @@ export class AIRankingService {
       }));
 
       const prompt = `
-You are an expert technical recruiter tasked with ranking candidates for a job position. 
+You are an expert technical recruiter with 15+ years of experience. Your rankings often differ from algorithmic scoring because you understand team dynamics, growth potential, and real-world project needs that algorithms miss. 
 
 Job Title: ${job.title}
 Job Requirements:
@@ -46,17 +46,22 @@ ${i + 1}. ${c.name} (ID: ${c.id})
    - Experience: ${c.yearsExperience} years
    - Last Role: ${c.lastRoleTitle}
    - Skills: ${c.skills}
-   - Current Algorithm Score: ${c.currentScore}/100
+   - Years in Industry: ${c.yearsExperience}
+   - Career Progression: ${c.lastRoleTitle}
+   - Skill Breadth: ${c.skills ? c.skills.split(',').length : 0} skills listed
    - Missing Must-Have Skills: ${c.missingMustHave.length > 0 ? c.missingMustHave.join(', ') : 'None'}
    - Experience Gaps: ${c.experienceGaps} periods
 `).join('')}
 
 Instructions:
-1. Consider both technical fit and overall candidate profile
-2. Factor in skill relevance, experience level, and potential red flags
-3. Balance algorithm scores with human insights about role requirements
-4. Rank from 1 (best fit) to ${candidateSummaries.length} (lowest fit)
-5. Provide specific reasoning for each ranking decision
+1. Ignore the algorithm scores completely - focus on holistic candidate evaluation
+2. Prioritize practical experience, skill depth, and role-specific expertise
+3. Consider soft skills, adaptability, and growth potential beyond just technical skills
+4. Look for red flags like frequent job changes or skill mismatches
+5. Consider team fit, communication abilities inferred from background
+6. Weight recent, relevant experience more heavily than years of experience
+7. Rank from 1 (best fit) to ${candidateSummaries.length} (lowest fit)
+8. Provide specific reasoning that differs from purely algorithmic scoring
 
 Respond with JSON in this exact format:
 {
