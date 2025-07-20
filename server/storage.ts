@@ -192,19 +192,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCandidateCountsByJob(): Promise<Record<number, number>> {
-    const result = await db.execute(`
-      SELECT 
-        j.id as job_id,
-        COUNT(s.candidate_id) as candidate_count
-      FROM jobs j
-      LEFT JOIN scores s ON j.id = s.job_id
-      GROUP BY j.id
-    `);
-    
+    // Get all candidates with scores grouped by job
+    const allJobs = await this.getJobs();
     const counts: Record<number, number> = {};
-    for (const row of result) {
-      counts[Number(row.job_id)] = Number(row.candidate_count) || 0;
+    
+    for (const job of allJobs) {
+      const candidatesWithScores = await this.getCandidatesWithScores(job.id);
+      counts[job.id] = candidatesWithScores.length;
     }
+    
     return counts;
   }
 }
