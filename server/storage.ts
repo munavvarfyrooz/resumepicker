@@ -8,11 +8,13 @@ export interface IStorage {
   getJob(id: number): Promise<Job | undefined>;
   createJob(job: InsertJob): Promise<Job>;
   updateJob(id: number, job: Partial<InsertJob>): Promise<Job>;
+  deleteJob(id: number): Promise<void>;
   
   // Candidates
   getCandidates(): Promise<Candidate[]>;
   getCandidate(id: number): Promise<Candidate | undefined>;
   createCandidate(candidate: InsertCandidate): Promise<Candidate>;
+  deleteCandidate(id: number): Promise<void>;
   getCandidatesWithScores(jobId: number): Promise<CandidateWithScore[]>;
   
   // Skills
@@ -66,6 +68,15 @@ export class DatabaseStorage implements IStorage {
     return updatedJob;
   }
 
+  async deleteJob(id: number): Promise<void> {
+    // Delete related data first (cascade delete)
+    await db.delete(jobSkills).where(eq(jobSkills.jobId, id));
+    await db.delete(scores).where(eq(scores.jobId, id));
+    
+    // Delete the job
+    await db.delete(jobs).where(eq(jobs.id, id));
+  }
+
   async getCandidates(): Promise<Candidate[]> {
     return await db.select().from(candidates).orderBy(desc(candidates.createdAt));
   }
@@ -90,6 +101,15 @@ export class DatabaseStorage implements IStorage {
     };
     const [newCandidate] = await db.insert(candidates).values(candidateData).returning();
     return newCandidate;
+  }
+
+  async deleteCandidate(id: number): Promise<void> {
+    // Delete related data first (cascade delete)
+    await db.delete(candidateSkills).where(eq(candidateSkills.candidateId, id));
+    await db.delete(scores).where(eq(scores.candidateId, id));
+    
+    // Delete the candidate
+    await db.delete(candidates).where(eq(candidates.id, id));
   }
 
   async getCandidatesWithScores(jobId: number): Promise<CandidateWithScore[]> {

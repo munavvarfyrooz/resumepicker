@@ -94,6 +94,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/jobs/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteJob(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Failed to delete job:', error);
+      res.status(500).json({ error: 'Failed to delete job' });
+    }
+  });
+
   // AI Analysis endpoint for extracting skills from job description
   app.post('/api/jobs/analyze-skills', async (req, res) => {
     try {
@@ -130,6 +141,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(candidate);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch candidate' });
+    }
+  });
+
+  app.delete('/api/candidates/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteCandidate(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Failed to delete candidate:', error);
+      res.status(500).json({ error: 'Failed to delete candidate' });
     }
   });
 

@@ -15,8 +15,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, Trash2, MoreVertical } from "lucide-react";
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function RankingTable() {
   const {
@@ -26,9 +35,34 @@ export default function RankingTable() {
     toggleCandidateSelection,
     setSelectedCandidate,
     filters,
+    selectedJob,
   } = useAppStore();
   
   const [sorting, setSorting] = useState<SortingState>([{ id: 'totalScore', desc: true }]);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Delete candidate mutation
+  const deleteCandidateMutation = useMutation({
+    mutationFn: async (candidateId: number) => {
+      return await apiRequest('DELETE', `/api/candidates/${candidateId}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/jobs', selectedJob?.id, 'candidates'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/jobs', 'candidate-counts'] });
+      toast({
+        title: "Success",
+        description: "Candidate deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete candidate",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Filter candidates based on current filters
   const filteredCandidates = useMemo(() => {
@@ -265,6 +299,28 @@ export default function RankingTable() {
         return <Badge variant="outline" className="text-warning">{totalMonths} months</Badge>;
       },
     },
+    {
+      id: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => deleteCandidateMutation.mutate(row.original.id)}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Candidate
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
   ];
 
   const table = useReactTable({
@@ -304,11 +360,32 @@ export default function RankingTable() {
                       </AvatarFallback>
                     </Avatar>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xl font-bold text-blue-600">
-                      {candidate.score?.totalScore?.toFixed(0) || 0}
+                  <div className="flex items-center space-x-2">
+                    <div className="text-right">
+                      <div className="text-xl font-bold text-blue-600">
+                        {candidate.score?.totalScore?.toFixed(0) || 0}
+                      </div>
+                      <div className="text-xs text-gray-500">Total Score</div>
                     </div>
-                    <div className="text-xs text-gray-500">Total Score</div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={(e) => e.stopPropagation()}>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteCandidateMutation.mutate(candidate.id);
+                          }}
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete Candidate
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
                 

@@ -5,7 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import FileUpload from "@/components/FileUpload";
-import { Plus, Briefcase, Users } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Plus, Briefcase, Users, Trash2, MoreVertical } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
@@ -44,6 +50,33 @@ export default function LeftSidebar() {
       toast({
         title: "Error",
         description: "Failed to create new job",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete job mutation
+  const deleteJobMutation = useMutation({
+    mutationFn: async (jobId: number) => {
+      return await apiRequest('DELETE', `/api/jobs/${jobId}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/jobs', 'candidate-counts'] });
+      toast({
+        title: "Success",
+        description: "Job deleted successfully",
+      });
+      // Reset selected job if it was deleted
+      if (selectedJob) {
+        setSelectedJob(null);
+        setLocation('/');
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete job",
         variant: "destructive",
       });
     },
@@ -105,16 +138,18 @@ export default function LeftSidebar() {
               return (
                 <Card
                   key={job.id}
-                  className={`p-3 cursor-pointer transition-colors hover:bg-accent ${
+                  className={`p-3 transition-colors hover:bg-accent ${
                     isSelected ? 'bg-blue-50 border-blue-200' : ''
                   }`}
-                  onClick={() => {
-                    setSelectedJob(job);
-                    setLocation(`/jobs/${job.id}`);
-                  }}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
+                    <div 
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={() => {
+                        setSelectedJob(job);
+                        setLocation(`/jobs/${job.id}`);
+                      }}
+                    >
                       <h3 className="text-sm font-medium text-text-primary truncate">
                         {job.title}
                       </h3>
@@ -125,9 +160,30 @@ export default function LeftSidebar() {
                         </p>
                       </div>
                     </div>
-                    <Badge variant={status.variant} className="ml-2 text-xs">
-                      {status.label}
-                    </Badge>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant={status.variant} className="text-xs">
+                        {status.label}
+                      </Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteJobMutation.mutate(job.id);
+                            }}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete Job
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </Card>
               );
