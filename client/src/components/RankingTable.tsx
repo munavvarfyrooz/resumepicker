@@ -383,7 +383,7 @@ export default function RankingTable() {
   });
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex-1 flex flex-col overflow-hidden h-full">
       {/* Mobile Card View */}
       <div className="md:hidden p-3">
         {filteredCandidates.length > 0 ? (
@@ -495,9 +495,9 @@ export default function RankingTable() {
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden md:block">
+      <div className="hidden md:block h-full">
         <div className="w-full overflow-x-auto border rounded-md bg-white">
-          <Table className="min-w-[1600px]">
+          <Table className="min-w-[1600px] w-full">
               <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="bg-gray-50">
