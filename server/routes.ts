@@ -3,6 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
 import { insertJobSchema, insertCandidateSchema, type ScoreWeights } from "@shared/schema";
+import path from "path";
+import { readFile } from "fs/promises";
 import { CVParser } from "./services/parsing";
 import { ScoringEngine } from "./services/scoring";
 import { FileStorage } from "./utils/fileStorage";
@@ -338,6 +340,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.send(csv);
     } catch (error) {
       res.status(500).json({ error: 'Failed to export shortlist' });
+    }
+  });
+
+  // CV Download endpoint
+  app.get('/api/candidates/:id/download', async (req, res) => {
+    try {
+      const candidateId = parseInt(req.params.id);
+      const candidate = await storage.getCandidate(candidateId);
+      
+      if (!candidate) {
+        return res.status(404).json({ error: 'Candidate not found' });
+      }
+
+      const filePath = candidate.filePath;
+      
+      try {
+        const fileBuffer = await readFile(filePath);
+        const fileName = candidate.fileName;
+        
+        // Set appropriate headers for download
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.send(fileBuffer);
+      } catch (fileError) {
+        res.status(404).json({ error: 'CV file not found on server' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to download CV' });
     }
   });
 

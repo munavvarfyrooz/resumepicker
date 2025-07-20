@@ -5,9 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { X, Download, UserPlus } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CandidateDrawer() {
   const { selectedCandidate, setSelectedCandidate, selectedCandidateIds, toggleCandidateSelection } = useAppStore();
+  const { toast } = useToast();
 
   if (!selectedCandidate) return null;
 
@@ -41,6 +43,54 @@ export default function CandidateDrawer() {
   };
 
   const isShortlisted = selectedCandidateIds.includes(candidate.id);
+
+  const handleDownloadCV = async () => {
+    try {
+      const response = await fetch(`/api/candidates/${candidate.id}/download`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to download CV');
+      }
+
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = 'CV.pdf';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download started",
+        description: `${candidate.name}'s CV is being downloaded.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Download failed",
+        description: "Unable to download the CV file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShortlist = () => {
+    toggleCandidateSelection(candidate.id);
+    toast({
+      title: isShortlisted ? "Removed from shortlist" : "Added to shortlist",
+      description: `${candidate.name} has been ${isShortlisted ? 'removed from' : 'added to'} your shortlist.`,
+    });
+  };
 
   return (
     <div className="w-full h-full bg-white flex flex-col animate-in slide-in-from-right-300 duration-300">
@@ -315,12 +365,12 @@ export default function CandidateDrawer() {
         <div className="flex space-x-3">
           <Button
             className="flex-1 bg-success hover:bg-green-600"
-            onClick={() => toggleCandidateSelection(candidate.id)}
+            onClick={handleShortlist}
           >
             <UserPlus className="w-4 h-4 mr-2" />
             {isShortlisted ? 'Remove from Shortlist' : 'Add to Shortlist'}
           </Button>
-          <Button variant="outline" className="flex-1">
+          <Button variant="outline" className="flex-1" onClick={handleDownloadCV}>
             <Download className="w-4 h-4 mr-2" />
             Download CV
           </Button>

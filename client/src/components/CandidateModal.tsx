@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { X, Download, UserPlus } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,7 @@ import {
 
 export default function CandidateModal() {
   const { selectedCandidate, setSelectedCandidate, selectedCandidateIds, toggleCandidateSelection } = useAppStore();
+  const { toast } = useToast();
 
   if (!selectedCandidate) return null;
 
@@ -48,6 +50,56 @@ export default function CandidateModal() {
   };
 
   const isShortlisted = selectedCandidateIds.includes(candidate.id);
+
+  const handleDownloadCV = async () => {
+    try {
+      const response = await fetch(`/api/candidates/${candidate.id}/download`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to download CV');
+      }
+
+      // Get the filename from response headers or use a default
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = 'CV.pdf';
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Download started",
+        description: `${candidate.name}'s CV is being downloaded.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Download failed",
+        description: "Unable to download the CV file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShortlist = () => {
+    toggleCandidateSelection(candidate.id);
+    toast({
+      title: isShortlisted ? "Removed from shortlist" : "Added to shortlist",
+      description: `${candidate.name} has been ${isShortlisted ? 'removed from' : 'added to'} your shortlist.`,
+    });
+  };
 
   return (
     <Dialog open={!!selectedCandidate} onOpenChange={() => setSelectedCandidate(null)}>
@@ -193,7 +245,7 @@ export default function CandidateModal() {
           {/* Actions */}
           <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-4 border-t">
             <Button
-              onClick={() => toggleCandidateSelection(candidate.id)}
+              onClick={handleShortlist}
               variant={isShortlisted ? "default" : "outline"}
               className={`w-full sm:w-auto ${isShortlisted ? "bg-success hover:bg-green-600" : ""}`}
             >
@@ -210,7 +262,7 @@ export default function CandidateModal() {
               )}
             </Button>
             
-            <Button variant="outline" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto" onClick={handleDownloadCV}>
               <Download className="w-4 h-4 mr-2" />
               Download CV
             </Button>

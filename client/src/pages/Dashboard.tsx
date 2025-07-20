@@ -68,10 +68,20 @@ export default function Dashboard() {
     if (!selectedJob || selectedCandidateIds.length === 0) return;
 
     try {
-      const response = await apiRequest('POST', '/api/export/shortlist', {
-        candidateIds: selectedCandidateIds,
-        jobId: selectedJob.id,
+      const response = await fetch('/api/export/shortlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          candidateIds: selectedCandidateIds,
+          jobId: selectedJob.id,
+        }),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to export shortlist');
+      }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
@@ -82,8 +92,18 @@ export default function Dashboard() {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+
+      toast({
+        title: "Export successful",
+        description: `Shortlist with ${selectedCandidateIds.length} candidates has been downloaded.`,
+      });
     } catch (error) {
       console.error('Export failed:', error);
+      toast({
+        title: "Export failed",
+        description: "Unable to export the shortlist. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
