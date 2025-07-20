@@ -58,9 +58,11 @@ export default function JDEditor() {
     onSuccess: (response) => {
       const analysis = response.json();
       setAiAnalysisResult(analysis);
+      const mustCount = analysis.mustHaveSkills?.length || 0;
+      const niceCount = analysis.niceToHaveSkills?.length || 0;
       toast({
         title: "AI Analysis Complete",
-        description: `Found ${analysis.mustHaveSkills.length} must-have and ${analysis.niceToHaveSkills.length} nice-to-have skills`,
+        description: `Found ${mustCount} must-have and ${niceCount} nice-to-have skills`,
       });
     },
     onError: () => {
@@ -150,8 +152,10 @@ export default function JDEditor() {
 
   const applyAISkills = () => {
     if (aiAnalysisResult) {
-      setMustHaveSkills([...new Set([...mustHaveSkills, ...aiAnalysisResult.mustHaveSkills])]);
-      setNiceToHaveSkills([...new Set([...niceToHaveSkills, ...aiAnalysisResult.niceToHaveSkills])]);
+      const newMustSkills = aiAnalysisResult.mustHaveSkills || [];
+      const newNiceSkills = aiAnalysisResult.niceToHaveSkills || [];
+      setMustHaveSkills([...new Set([...mustHaveSkills, ...newMustSkills])]);
+      setNiceToHaveSkills([...new Set([...niceToHaveSkills, ...newNiceSkills])]);
       setAiAnalysisResult(null);
       toast({
         title: "Skills Applied",
@@ -335,7 +339,7 @@ export default function JDEditor() {
                     </div>
                     
                     <div className="space-y-3">
-                      {aiAnalysisResult.mustHaveSkills.length > 0 && (
+                      {aiAnalysisResult.mustHaveSkills && aiAnalysisResult.mustHaveSkills.length > 0 && (
                         <div>
                           <p className="text-sm font-medium text-red-700 dark:text-red-300 mb-2">Suggested Must-Have Skills:</p>
                           <div className="flex flex-wrap gap-2">
@@ -348,7 +352,7 @@ export default function JDEditor() {
                         </div>
                       )}
                       
-                      {aiAnalysisResult.niceToHaveSkills.length > 0 && (
+                      {aiAnalysisResult.niceToHaveSkills && aiAnalysisResult.niceToHaveSkills.length > 0 && (
                         <div>
                           <p className="text-sm font-medium text-blue-700 dark:text-blue-300 mb-2">Suggested Nice-to-Have Skills:</p>
                           <div className="flex flex-wrap gap-2">
