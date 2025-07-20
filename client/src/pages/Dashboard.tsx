@@ -341,9 +341,9 @@ export default function Dashboard() {
         </div>
 
         {view === 'ranking' && (
-          <div className="flex-1 flex flex-col overflow-hidden h-full">
+          <div className="flex-1 flex flex-col overflow-hidden">
             <FilterBar />
-            <div className="flex-1 overflow-hidden h-full">
+            <div className="flex-1 overflow-auto">
               {candidatesLoading ? (
                 <div className="flex items-center justify-center h-full min-h-[200px]">
                   <div className="text-center">
