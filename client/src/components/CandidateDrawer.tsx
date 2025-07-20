@@ -43,7 +43,7 @@ export default function CandidateDrawer() {
   const isShortlisted = selectedCandidateIds.includes(candidate.id);
 
   return (
-    <div className="w-96 bg-surface border-l border-border flex flex-col animate-in slide-in-from-right duration-300">
+    <div className="w-full h-full bg-white flex flex-col animate-in slide-in-from-right-300 duration-300">
       {/* Header */}
       <div className="p-6 border-b border-border">
         <div className="flex items-center justify-between mb-4">

@@ -535,7 +535,10 @@ export default function RankingTable() {
                   <TableRow
                     key={row.id}
                     className="cursor-pointer hover:bg-gray-50"
-                    onClick={() => setSelectedCandidate(row.original)}
+                    onClick={() => {
+                      console.log('Clicked candidate:', row.original.name);
+                      setSelectedCandidate(row.original);
+                    }}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="py-2 px-2 border-b border-border">

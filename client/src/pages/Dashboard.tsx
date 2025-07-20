@@ -5,6 +5,7 @@ import { useAppStore } from "@/store/appStore";
 import LeftSidebar from "@/components/LeftSidebar";
 import RankingTable from "@/components/RankingTable";
 import CandidateDrawer from "@/components/CandidateDrawer";
+import CandidateModal from "@/components/CandidateModal";
 import FilterBar from "@/components/FilterBar";
 import ScoreWeightsModal from "@/components/ScoreWeightsModal";
 import JDEditor from "./JDEditor";
@@ -376,12 +377,12 @@ export default function Dashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="flex h-full">
+                <div className="flex h-full relative">
                   <div className="flex-1 overflow-hidden">
                     <RankingTable />
                   </div>
                   {selectedCandidate && (
-                    <div className="w-96 flex-shrink-0">
+                    <div className="w-96 flex-shrink-0 border-l border-gray-200 bg-white">
                       <CandidateDrawer />
                     </div>
                   )}
@@ -400,6 +401,7 @@ export default function Dashboard() {
 
 
       {weightsModalOpen && <ScoreWeightsModal />}
+      <CandidateModal />
     </div>
   );
 }
