@@ -157,9 +157,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // File upload endpoint with error handling
+  // File upload endpoint with flexible field handling
   app.post('/api/upload', (req, res, next) => {
-    upload.array('files', 20)(req, res, (err) => {
+    // Try both 'files' and 'file' field names to handle various upload scenarios
+    const uploadHandler = upload.any();
+    
+    uploadHandler(req, res, (err) => {
       if (err instanceof multer.MulterError) {
         console.error('Multer error:', err);
         return res.status(400).json({ 
@@ -176,7 +179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Upload request received:', {
         filesCount: req.files ? req.files.length : 0,
-        fieldName: req.files ? 'files array' : 'no files',
+        fieldNames: req.files ? req.files.map(f => f.fieldname) : [],
         body: Object.keys(req.body)
       });
 
@@ -189,19 +192,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       for (const file of req.files) {
         try {
-          // Save file
+          // Parse CV first
+          const parsedCV = await CVParser.parseBuffer(file.buffer, file.originalname);
+
+          // Extract name and email from CV text
+          const name = extractName(parsedCV.text) || file.originalname.replace(/\.[^/.]+$/, "");
+          const email = extractEmail(parsedCV.text) || `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`;
+
+          // Check for duplicates by email or filename
+          const existingCandidates = await storage.getCandidates();
+          const duplicateByEmail = existingCandidates.find(c => c.email === email);
+          const duplicateByFilename = existingCandidates.find(c => c.fileName === file.originalname);
+          
+          if (duplicateByEmail || duplicateByFilename) {
+            results.push({
+              success: false,
+              error: `Duplicate candidate: ${duplicateByEmail ? 'email already exists' : 'filename already uploaded'}`,
+              fileName: file.originalname,
+            });
+            continue;
+          }
+
+          // Save file only if not duplicate
           const fileInfo = await FileStorage.saveFile(
             file.buffer,
             file.originalname,
             file.mimetype
           );
-
-          // Parse CV
-          const parsedCV = await CVParser.parseFile(fileInfo.filePath, fileInfo.fileType);
-
-          // Extract name and email from CV text (simplified)
-          const name = extractName(parsedCV.text) || file.originalname.replace(/\.[^/.]+$/, "");
-          const email = extractEmail(parsedCV.text) || `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`;
 
           // Create candidate record
           const candidateData = {
@@ -228,6 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fileName: file.originalname,
           });
         } catch (error) {
+          console.error('Error processing file:', file.originalname, error);
           results.push({
             success: false,
             error: (error as Error).message,

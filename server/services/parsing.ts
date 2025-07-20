@@ -25,6 +25,45 @@ export interface ParsedCV {
 }
 
 export class CVParser {
+  static async parseBuffer(buffer: Buffer, filename: string): Promise<ParsedCV> {
+    const fileType = filename.toLowerCase().endsWith('.pdf') ? 'pdf' : 
+                    filename.toLowerCase().endsWith('.docx') ? 'docx' : 'txt';
+    
+    let text = '';
+    
+    if (fileType === 'pdf') {
+      text = await this.parsePDFBuffer(buffer);
+    } else if (fileType === 'docx') {
+      text = await this.parseDOCXBuffer(buffer);
+    } else if (fileType === 'txt') {
+      text = buffer.toString('utf-8');
+    } else {
+      throw new Error('Unsupported file type');
+    }
+
+    return this.extractStructuredData(text);
+  }
+
+  private static async parsePDFBuffer(buffer: Buffer): Promise<string> {
+    try {
+      const data = await pdfParse(buffer);
+      return data.text || 'No text content found in PDF';
+    } catch (error) {
+      console.error('PDF parsing error:', error);
+      throw new Error('Failed to parse PDF file');
+    }
+  }
+
+  private static async parseDOCXBuffer(buffer: Buffer): Promise<string> {
+    try {
+      const result = await mammoth.extractRawText({ buffer });
+      return result.value || 'No text content found in DOCX';
+    } catch (error) {
+      console.error('DOCX parsing error:', error);
+      throw new Error('Failed to parse DOCX file');
+    }
+  }
+
   private static skillKeywords = [
     'react', 'angular', 'vue', 'javascript', 'typescript', 'node.js', 'python', 'java',
     'html', 'css', 'scss', 'sass', 'tailwind', 'bootstrap', 'mongodb', 'postgresql',
@@ -51,7 +90,7 @@ export class CVParser {
         throw new Error(`Unsupported file type: ${fileType}`);
     }
 
-    return await this.extractInformation(text);
+    return await this.extractStructuredData(text);
   }
 
   private static async parsePDF(filePath: string): Promise<string> {
@@ -89,7 +128,7 @@ export class CVParser {
     return fs.readFileSync(filePath, 'utf-8');
   }
 
-  private static async extractInformation(text: string): Promise<ParsedCV> {
+  private static async extractStructuredData(text: string): Promise<ParsedCV> {
     // Use AI parsing for enhanced extraction
     const aiResult = await AIParsingService.extractSkillsWithAI(text);
     

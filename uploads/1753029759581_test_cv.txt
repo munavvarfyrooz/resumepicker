@@ -1,0 +1,8 @@
+John Doe - Software Engineer
+
+Experience:
+- 5 years in React development
+- 3 years in Node.js
+- Expert in JavaScript, TypeScript
+
+Contact: john.doe@example.com
