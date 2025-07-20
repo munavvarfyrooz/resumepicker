@@ -112,8 +112,8 @@ export default function RankingTable() {
         />
       ),
       enableSorting: false,
-      size: 40,
-      maxSize: 40,
+      size: 30,
+      maxSize: 30,
     },
     {
       accessorKey: 'name',
@@ -143,7 +143,7 @@ export default function RankingTable() {
           .slice(0, 2);
 
         return (
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="text-xs">{initials}</AvatarFallback>
             </Avatar>
@@ -154,8 +154,8 @@ export default function RankingTable() {
           </div>
         );
       },
-      size: 200,
-      maxSize: 250,
+      size: 180,
+      maxSize: 200,
     },
     {
       id: 'totalScore',
@@ -185,7 +185,7 @@ export default function RankingTable() {
         };
 
         return (
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             <div className={`w-10 h-10 rounded-full border-4 flex items-center justify-center ${
               score >= 80 ? 'border-success' : score >= 60 ? 'border-warning' : 'border-danger'
             }`}>
@@ -197,8 +197,8 @@ export default function RankingTable() {
           </div>
         );
       },
-      size: 120,
-      maxSize: 140,
+      size: 100,
+      maxSize: 110,
     },
     {
       id: 'aiRank',
@@ -228,7 +228,7 @@ export default function RankingTable() {
         }
 
         return (
-          <div className="flex items-center space-x-2 min-w-[250px]">
+          <div className="flex items-center space-x-1 min-w-[220px]">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0 ${
               aiRank <= 3 ? 'bg-green-100 text-green-800' : 
               aiRank <= 6 ? 'bg-yellow-100 text-yellow-800' : 
@@ -237,15 +237,15 @@ export default function RankingTable() {
               #{aiRank}
             </div>
             {aiReason && (
-              <div className="text-xs text-gray-500 max-w-[190px] truncate" title={aiReason}>
+              <div className="text-xs text-gray-500 max-w-[160px] truncate" title={aiReason}>
                 {aiReason}
               </div>
             )}
           </div>
         );
       },
-      size: 280,
-      maxSize: 320,
+      size: 240,
+      maxSize: 280,
     },
     {
       id: 'skillMatch',
@@ -268,8 +268,8 @@ export default function RankingTable() {
           </div>
         );
       },
-      size: 120,
-      maxSize: 140,
+      size: 100,
+      maxSize: 110,
     },
     {
       id: 'missingMust',
@@ -291,8 +291,8 @@ export default function RankingTable() {
           </div>
         );
       },
-      size: 100,
-      maxSize: 120,
+      size: 80,
+      maxSize: 100,
     },
     {
       id: 'titleMatch',
@@ -315,8 +315,8 @@ export default function RankingTable() {
           </div>
         );
       },
-      size: 100,
-      maxSize: 120,
+      size: 80,
+      maxSize: 100,
     },
     {
       accessorKey: 'yearsExperience',
@@ -332,8 +332,8 @@ export default function RankingTable() {
           </div>
         );
       },
-      size: 90,
-      maxSize: 110,
+      size: 80,
+      maxSize: 90,
     },
     {
       accessorKey: 'lastRoleTitle',
@@ -342,8 +342,8 @@ export default function RankingTable() {
         const role = row.original.lastRoleTitle;
         return <span className="text-text-primary">{role || 'Not specified'}</span>;
       },
-      size: 150,
-      maxSize: 180,
+      size: 120,
+      maxSize: 150,
     },
     {
       id: 'gaps',
@@ -515,12 +515,12 @@ export default function RankingTable() {
       {/* Desktop Table View */}
       <div className="hidden md:block flex-1 overflow-hidden">
         <div className="w-full h-full overflow-auto border rounded-md bg-white">
-          <Table className="min-w-[1400px] w-full">
+          <Table className="min-w-[1200px] w-full">
               <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id} className="bg-gray-50">
                   {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className="py-3 px-4 font-medium text-text-secondary text-sm border-b border-border">
+                    <TableHead key={header.id} className="py-2 px-2 font-medium text-text-secondary text-sm border-b border-border">
                       {header.isPlaceholder
                         ? null
                         : flexRender(header.column.columnDef.header, header.getContext())}
@@ -538,7 +538,7 @@ export default function RankingTable() {
                     onClick={() => setSelectedCandidate(row.original)}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="py-3 px-4 border-b border-border">
+                      <TableCell key={cell.id} className="py-2 px-2 border-b border-border">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
