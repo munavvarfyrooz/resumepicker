@@ -19,11 +19,13 @@ interface AppState {
   candidateDrawerOpen: boolean;
   weightsModalOpen: boolean;
   selectedCandidateIds: number[];
+  sidebarCollapsed: boolean;
   setView: (view: 'ranking' | 'jd-editor') => void;
   setCandidateDrawerOpen: (open: boolean) => void;
   setWeightsModalOpen: (open: boolean) => void;
   setSelectedCandidateIds: (ids: number[]) => void;
   toggleCandidateSelection: (id: number) => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
   
   // Filters
   filters: {
@@ -56,6 +58,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   candidateDrawerOpen: false,
   weightsModalOpen: false,
   selectedCandidateIds: [],
+  sidebarCollapsed: false,
   filters: {
     minYears: null,
     skills: [],
@@ -92,4 +95,5 @@ export const useAppStore = create<AppState>((set, get) => ({
   })),
   setScoreWeights: (weights) => set({ scoreWeights: weights }),
   setUploadProgress: (progress) => set({ uploadProgress: progress }),
+  setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
 }));

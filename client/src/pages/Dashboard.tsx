@@ -26,6 +26,8 @@ export default function Dashboard() {
     selectedCandidateIds,
     view,
     setView,
+    sidebarCollapsed,
+    setSidebarCollapsed,
   } = useAppStore();
 
   // Fetch jobs
@@ -203,8 +205,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Sidebar - Hidden on mobile, visible on desktop */}
-      <div className="hidden md:block">
+      {/* Sidebar - Hidden on mobile, collapsible on desktop */}
+      <div className={`hidden md:block transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-80'}`}>
         <LeftSidebar />
       </div>
       
@@ -213,6 +215,27 @@ export default function Dashboard() {
         <div className="hidden md:block bg-surface border-b border-border px-6 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-2 hover:bg-gray-100"
+                title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d={sidebarCollapsed ? "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" : "M4 6h16M4 12h8m-8 6h16"}
+                  />
+                </svg>
+              </Button>
               <h1 className="text-lg font-semibold text-text-primary">{selectedJob.title}</h1>
               <div className="flex space-x-2">
                 <Button

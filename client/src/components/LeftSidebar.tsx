@@ -20,7 +20,7 @@ export default function LeftSidebar() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { selectedJob, setSelectedJob } = useAppStore();
+  const { selectedJob, setSelectedJob, sidebarCollapsed } = useAppStore();
 
   // Fetch jobs
   const { data: jobs = [] } = useQuery({
@@ -114,14 +114,16 @@ export default function LeftSidebar() {
   });
 
   return (
-    <div className="w-80 bg-surface border-r border-border flex flex-col h-screen">
+    <div className={`${sidebarCollapsed ? 'w-16' : 'w-80'} bg-surface border-r border-border flex flex-col h-screen transition-all duration-300`}>
       {/* Header */}
       <div className="p-6 border-b border-border flex-shrink-0">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <Briefcase className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-xl font-semibold text-text-primary">TalentMatch</h1>
+          {!sidebarCollapsed && (
+            <h1 className="text-xl font-semibold text-text-primary">TalentMatch</h1>
+          )}
         </div>
       </div>
 
@@ -130,12 +132,15 @@ export default function LeftSidebar() {
         {/* Jobs Section */}
         <div className="p-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-medium text-text-secondary uppercase tracking-wider">Jobs</h2>
+            {!sidebarCollapsed && (
+              <h2 className="text-sm font-medium text-text-secondary uppercase tracking-wider">Jobs</h2>
+            )}
             <Button
               size="sm"
               variant="ghost"
               onClick={() => createJobMutation.mutate()}
               disabled={createJobMutation.isPending}
+              className={sidebarCollapsed ? "w-full" : ""}
             >
               <Plus className="w-4 h-4" />
             </Button>
