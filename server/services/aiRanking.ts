@@ -42,7 +42,7 @@ Nice-to-have skills: ${job.requirements?.nice?.join(', ') || 'None specified'}
 
 Candidates to rank:
 ${candidateSummaries.map((c, i) => `
-${i + 1}. ${c.name}
+${i + 1}. ${c.name} (ID: ${c.id})
    - Experience: ${c.yearsExperience} years
    - Last Role: ${c.lastRoleTitle}
    - Skills: ${c.skills}
@@ -92,26 +92,45 @@ Respond with JSON in this exact format:
         throw new Error('Invalid AI response format');
       }
 
-      // Ensure all candidates get a ranking
-      const rankings = result.rankings.map((ranking: any) => ({
-        candidateId: ranking.candidateId,
-        rank: ranking.rank,
-        reason: ranking.reason || 'AI ranking analysis'
-      }));
-
-      // Fill in any missing candidates with default rankings
-      const rankedIds = new Set(rankings.map(r => r.candidateId));
-      const missingCandidates = candidateSummaries.filter(c => !rankedIds.has(c.id));
+      // Process AI rankings and ensure proper 1-N ranking sequence
+      const aiRankings = result.rankings || [];
+      const allRankings: AIRankingResult[] = [];
       
-      for (let i = 0; i < missingCandidates.length; i++) {
-        rankings.push({
-          candidateId: missingCandidates[i].id,
-          rank: rankings.length + i + 1,
+      // Create a map of ranked candidates
+      const rankedIds = new Set(aiRankings.map((r: any) => r.candidateId));
+      
+      // Add AI-ranked candidates (map AI ranks to actual candidate IDs)
+      aiRankings.forEach((ranking: any) => {
+        // The AI uses candidateId, but we need to find the actual candidate
+        const candidate = candidateSummaries.find(c => c.id === ranking.candidateId);
+        if (candidate) {
+          allRankings.push({
+            candidateId: candidate.id,
+            rank: ranking.rank,
+            reason: ranking.reason || 'AI ranking analysis'
+          });
+        }
+      });
+      
+      // Add unranked candidates with sequential ranks
+      const unrankedCandidates = candidateSummaries.filter(c => !rankedIds.has(c.id));
+      const maxRank = Math.max(...allRankings.map(r => r.rank), 0);
+      
+      unrankedCandidates.forEach((candidate, index) => {
+        allRankings.push({
+          candidateId: candidate.id,
+          rank: maxRank + index + 1,
           reason: 'Standard evaluation based on profile analysis'
         });
-      }
+      });
+      
+      // Ensure ranks are 1-N by re-sorting and re-numbering
+      allRankings.sort((a, b) => a.rank - b.rank);
+      allRankings.forEach((ranking, index) => {
+        ranking.rank = index + 1;
+      });
 
-      return rankings;
+      return allRankings;
 
     } catch (error) {
       console.error('AI ranking failed:', error);
