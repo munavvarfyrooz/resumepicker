@@ -9,7 +9,6 @@ import JDEditor from "@/pages/JDEditor";
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import AdminDashboard from "@/pages/AdminDashboard";
-import CustomLogin from "@/pages/CustomLogin";
 import AuthPage from "@/pages/AuthPage";
 import NotFound from "@/pages/not-found";
 

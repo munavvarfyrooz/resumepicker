@@ -67,44 +67,16 @@ export default function Home() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Link href="/dashboard">
             <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
               <CardHeader className="pb-3">
                 <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mb-3">
                   <BarChart3 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <CardTitle className="text-lg">Main Dashboard</CardTitle>
+                <CardTitle className="text-lg">Open Dashboard</CardTitle>
                 <CardDescription>
-                  View jobs, candidates, and manage your recruitment pipeline.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/dashboard">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
-              <CardHeader className="pb-3">
-                <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mb-3">
-                  <Upload className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-                <CardTitle className="text-lg">Upload Resumes</CardTitle>
-                <CardDescription>
-                  Bulk upload and process candidate resumes with AI analysis.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
-
-          <Link href="/dashboard">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
-              <CardHeader className="pb-3">
-                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mb-3">
-                  <Users className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                </div>
-                <CardTitle className="text-lg">Manage Candidates</CardTitle>
-                <CardDescription>
-                  Review, rank, and shortlist candidates for your open positions.
+                  Access your complete recruitment workspace with jobs, candidates, and AI-powered matching.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -131,9 +103,9 @@ export default function Home() {
         <div className="grid lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2 border-0 shadow-md">
             <CardHeader>
-              <CardTitle>Getting Started with SmartHire</CardTitle>
+              <CardTitle>How SmartHire Works</CardTitle>
               <CardDescription>
-                Follow these steps to set up your recruitment workflow
+                Your complete AI-powered recruitment workflow in one dashboard
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -142,9 +114,9 @@ export default function Home() {
                   1
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">Create a Job Description</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white">Create Job Descriptions</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Start by creating detailed job descriptions with skill requirements.
+                    Define roles with detailed skill requirements and responsibilities.
                   </p>
                 </div>
               </div>
@@ -154,9 +126,9 @@ export default function Home() {
                   2
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">Upload Candidate Resumes</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white">Upload & Process CVs</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Bulk upload up to 20 resumes at once for automated processing.
+                    Bulk upload resumes with automatic text extraction and skill parsing.
                   </p>
                 </div>
               </div>
@@ -166,9 +138,9 @@ export default function Home() {
                   3
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">Review AI Rankings</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white">AI-Powered Matching</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Analyze both algorithmic and AI-powered candidate rankings.
+                    Get dual rankings: algorithmic scoring and OpenAI analysis.
                   </p>
                 </div>
               </div>
@@ -178,9 +150,9 @@ export default function Home() {
                   4
                 </div>
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white">Build Your Shortlist</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white">Export & Shortlist</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Create shortlists and export candidate data for interviews.
+                    Download reports and build shortlists for interview rounds.
                   </p>
                 </div>
               </div>
