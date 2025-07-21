@@ -9,7 +9,7 @@ import { CVParser } from "./services/parsing";
 import { ScoringEngine } from "./services/scoring";
 import { FileStorage } from "./utils/fileStorage";
 import { JobAnalysisService } from "./services/jobAnalysis";
-import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
+import { setupCustomAuth, isAuthenticated } from "./customAuth";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -27,22 +27,15 @@ const upload = multer({
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication middleware
-  await setupAuth(app);
+  setupCustomAuth(app);
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  // Note: Auth routes are handled in customAuth.ts
 
   // Admin routes
-  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
+  app.get('/api/admin/users', isAuthenticated, async (req: any, res) => {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
     try {
       const users = await storage.getAllUsers();
       res.json(users);
@@ -52,7 +45,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/stats/users', isAuthenticated, isAdmin, async (req, res) => {
+  app.get('/api/admin/stats/users', isAuthenticated, async (req: any, res) => {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
     try {
       const stats = await storage.getUserStats();
       res.json(stats);
@@ -62,7 +58,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/stats/usage', isAuthenticated, isAdmin, async (req, res) => {
+  app.get('/api/admin/stats/usage', isAuthenticated, async (req: any, res) => {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
     try {
       const stats = await storage.getUsageStats();
       res.json(stats);
@@ -72,7 +71,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/users/usage', isAuthenticated, isAdmin, async (req, res) => {
+  app.get('/api/admin/users/usage', isAuthenticated, async (req: any, res) => {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
     try {
       const userUsage = await storage.getUserUsageDetails();
       res.json(userUsage);
@@ -82,7 +84,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/users/:id/role', isAuthenticated, isAdmin, async (req, res) => {
+  app.patch('/api/admin/users/:id/role', isAuthenticated, async (req: any, res) => {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
     try {
       const { role } = req.body;
       if (!['user', 'admin'].includes(role)) {
@@ -96,7 +101,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/admin/users/:id/status', isAuthenticated, isAdmin, async (req, res) => {
+  app.patch('/api/admin/users/:id/status', isAuthenticated, async (req: any, res) => {
+    if (req.user?.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
     try {
       const { isActive } = req.body;
       const user = await storage.updateUserStatus(req.params.id, isActive);
