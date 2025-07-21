@@ -124,13 +124,20 @@ export function setupCustomAuth(app: Express) {
     }
   });
 
-  // Logout endpoint
-  app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
+  // Logout endpoints (both GET and POST for flexibility)
+  const handleLogout = (req: any, res: any, next: any) => {
+    req.logout((err: any) => {
       if (err) return next(err);
-      res.sendStatus(200);
+      if (req.method === 'GET') {
+        res.redirect('/auth');
+      } else {
+        res.sendStatus(200);
+      }
     });
-  });
+  };
+
+  app.post("/api/logout", handleLogout);
+  app.get("/api/logout", handleLogout);
 
   // Get current user
   app.get("/api/auth/user", (req, res) => {
