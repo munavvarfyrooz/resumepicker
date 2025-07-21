@@ -1,8 +1,54 @@
-import { jobs, candidates, candidateSkills, jobSkills, scores, type Job, type Candidate, type CandidateWithScore, type Score, type InsertJob, type InsertCandidate, type InsertScore, type ScoreWeights } from "@shared/schema";
+import { 
+  jobs, 
+  candidates, 
+  candidateSkills, 
+  jobSkills, 
+  scores, 
+  users,
+  userSessions,
+  userActions,
+  type Job, 
+  type Candidate, 
+  type CandidateWithScore, 
+  type Score, 
+  type User,
+  type UpsertUser,
+  type UserSession,
+  type UserAction,
+  type InsertUserAction,
+  type InsertJob, 
+  type InsertCandidate, 
+  type InsertScore, 
+  type ScoreWeights,
+  type UserStats,
+  type UsageStats,
+  type UserUsageDetail
+} from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, count, sql, gte } from "drizzle-orm";
 
 export interface IStorage {
+  // Authentication (mandatory for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
+  // User management
+  getAllUsers(): Promise<User[]>;
+  updateUserRole(userId: string, role: 'user' | 'admin'): Promise<User>;
+  updateUserStatus(userId: string, isActive: boolean): Promise<User>;
+  
+  // Session tracking
+  createUserSession(userId: string, ipAddress?: string, userAgent?: string): Promise<UserSession>;
+  endUserSession(sessionId: number): Promise<void>;
+  
+  // Activity tracking
+  logUserAction(action: InsertUserAction): Promise<UserAction>;
+  
+  // Analytics
+  getUserStats(): Promise<UserStats>;
+  getUsageStats(): Promise<UsageStats>;
+  getUserUsageDetails(): Promise<UserUsageDetail[]>;
+  
   // Jobs
   getJobs(): Promise<Job[]>;
   getJob(id: number): Promise<Job | undefined>;
@@ -33,6 +79,168 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Authentication methods (mandatory for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...userData,
+        lastLoginAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          lastLoginAt: new Date(),
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  // User management methods
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async updateUserRole(userId: string, role: 'user' | 'admin'): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  async updateUserStatus(userId: string, isActive: boolean): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ isActive, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  // Session tracking
+  async createUserSession(userId: string, ipAddress?: string, userAgent?: string): Promise<UserSession> {
+    const [session] = await db
+      .insert(userSessions)
+      .values({
+        userId,
+        ipAddress,
+        userAgent,
+      })
+      .returning();
+    return session;
+  }
+
+  async endUserSession(sessionId: number): Promise<void> {
+    await db
+      .update(userSessions)
+      .set({ sessionEnd: new Date() })
+      .where(eq(userSessions.id, sessionId));
+  }
+
+  // Activity tracking
+  async logUserAction(action: InsertUserAction): Promise<UserAction> {
+    const [userAction] = await db
+      .insert(userActions)
+      .values(action)
+      .returning();
+    return userAction;
+  }
+
+  // Analytics methods
+  async getUserStats(): Promise<UserStats> {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const [totalUsers] = await db
+      .select({ count: count() })
+      .from(users);
+
+    const [activeUsers] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(eq(users.isActive, true));
+
+    const [newUsers] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(gte(users.createdAt, oneWeekAgo));
+
+    const [adminUsers] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(eq(users.role, 'admin'));
+
+    return {
+      totalUsers: totalUsers.count,
+      activeUsers: activeUsers.count,
+      newUsersThisWeek: newUsers.count,
+      adminUsers: adminUsers.count,
+    };
+  }
+
+  async getUsageStats(): Promise<UsageStats> {
+    const [totalJobs] = await db
+      .select({ count: count() })
+      .from(jobs);
+
+    const [totalCandidates] = await db
+      .select({ count: count() })
+      .from(candidates);
+
+    const [uploadActions] = await db
+      .select({ count: count() })
+      .from(userActions)
+      .where(eq(userActions.action, 'upload'));
+
+    // Calculate average candidates per job
+    const avgCandidatesPerJob = totalJobs.count > 0 
+      ? Math.round(totalCandidates.count / totalJobs.count * 100) / 100
+      : 0;
+
+    return {
+      totalJobs: totalJobs.count,
+      totalCandidates: totalCandidates.count,
+      totalUploads: uploadActions.count,
+      avgCandidatesPerJob,
+    };
+  }
+
+  async getUserUsageDetails(): Promise<UserUsageDetail[]> {
+    const userUsage = await db
+      .select({
+        user: users,
+        jobsCreated: sql<number>`count(distinct ${jobs.id})`.as('jobs_created'),
+        candidatesUploaded: sql<number>`count(distinct ${userActions.id})`.as('candidates_uploaded'),
+        totalSessions: sql<number>`count(distinct ${userSessions.id})`.as('total_sessions'),
+      })
+      .from(users)
+      .leftJoin(jobs, eq(jobs.createdBy, users.id))
+      .leftJoin(userActions, and(
+        eq(userActions.userId, users.id),
+        eq(userActions.action, 'upload')
+      ))
+      .leftJoin(userSessions, eq(userSessions.userId, users.id))
+      .groupBy(users.id)
+      .orderBy(desc(users.lastLoginAt));
+
+    return userUsage.map(row => ({
+      user: row.user,
+      jobsCreated: row.jobsCreated || 0,
+      candidatesUploaded: row.candidatesUploaded || 0,
+      lastActivity: row.user.lastLoginAt,
+      totalSessions: row.totalSessions || 0,
+    }));
+  }
   async getJobs(): Promise<Job[]> {
     return await db.select().from(jobs).orderBy(desc(jobs.createdAt));
   }

@@ -9,6 +9,7 @@ import { CVParser } from "./services/parsing";
 import { ScoringEngine } from "./services/scoring";
 import { FileStorage } from "./utils/fileStorage";
 import { JobAnalysisService } from "./services/jobAnalysis";
+import { setupAuth, isAuthenticated, isAdmin } from "./replitAuth";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -25,8 +26,89 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Jobs endpoints
-  app.get('/api/jobs', async (req, res) => {
+  // Set up authentication middleware
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Admin routes
+  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: 'Failed to fetch users' });
+    }
+  });
+
+  app.get('/api/admin/stats/users', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getUserStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      res.status(500).json({ error: 'Failed to fetch user stats' });
+    }
+  });
+
+  app.get('/api/admin/stats/usage', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getUsageStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching usage stats:", error);
+      res.status(500).json({ error: 'Failed to fetch usage stats' });
+    }
+  });
+
+  app.get('/api/admin/users/usage', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const userUsage = await storage.getUserUsageDetails();
+      res.json(userUsage);
+    } catch (error) {
+      console.error("Error fetching user usage details:", error);
+      res.status(500).json({ error: 'Failed to fetch user usage details' });
+    }
+  });
+
+  app.patch('/api/admin/users/:id/role', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { role } = req.body;
+      if (!['user', 'admin'].includes(role)) {
+        return res.status(400).json({ error: 'Invalid role' });
+      }
+      const user = await storage.updateUserRole(req.params.id, role);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user role:", error);
+      res.status(500).json({ error: 'Failed to update user role' });
+    }
+  });
+
+  app.patch('/api/admin/users/:id/status', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const { isActive } = req.body;
+      const user = await storage.updateUserStatus(req.params.id, isActive);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      res.status(500).json({ error: 'Failed to update user status' });
+    }
+  });
+
+  // Jobs endpoints (protected)
+  app.get('/api/jobs', isAuthenticated, async (req, res) => {
     try {
       const jobs = await storage.getJobs();
       res.json(jobs);
@@ -35,7 +117,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/jobs/candidate-counts', async (req, res) => {
+  app.get('/api/jobs/candidate-counts', isAuthenticated, async (req, res) => {
     try {
       const counts = await storage.getCandidateCountsByJob();
       res.json(counts);
@@ -44,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/jobs/:id', async (req, res) => {
+  app.get('/api/jobs/:id', isAuthenticated, async (req, res) => {
     try {
       const job = await storage.getJob(parseInt(req.params.id));
       if (!job) {
@@ -56,10 +138,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/jobs', async (req, res) => {
+  app.post('/api/jobs', isAuthenticated, async (req: any, res) => {
     try {
       const validatedData = insertJobSchema.parse(req.body);
-      const job = await storage.createJob(validatedData);
+      const job = await storage.createJob({
+        ...validatedData,
+        createdBy: req.user.claims.sub,
+      });
+      
+      // Log user action
+      await storage.logUserAction({
+        userId: req.user.claims.sub,
+        action: 'create_job',
+        resourceType: 'job',
+        resourceId: job.id,
+        metadata: { title: job.title },
+      });
       
       // Extract and save job skills
       if (validatedData.requirements) {
@@ -76,7 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/jobs/:id', async (req, res) => {
+  app.put('/api/jobs/:id', isAuthenticated, async (req, res) => {
     try {
       const validatedData = insertJobSchema.parse(req.body);
       const job = await storage.updateJob(parseInt(req.params.id), validatedData);
@@ -179,7 +273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Upload request received:', {
         filesCount: req.files ? req.files.length : 0,
-        fieldNames: req.files ? req.files.map(f => f.fieldname) : [],
+        fieldNames: req.files ? (req.files as any[]).map((f: any) => f.fieldname) : [],
         body: Object.keys(req.body)
       });
 

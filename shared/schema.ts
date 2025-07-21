@@ -1,7 +1,51 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb, real } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, real, varchar, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Authentication tables
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  role: varchar("role", { enum: ["user", "admin"] }).notNull().default("user"),
+  isActive: boolean("is_active").notNull().default(true),
+  lastLoginAt: timestamp("last_login_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Usage tracking tables
+export const userSessions = pgTable("user_sessions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  sessionStart: timestamp("session_start").defaultNow().notNull(),
+  sessionEnd: timestamp("session_end"),
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+});
+
+export const userActions = pgTable("user_actions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id).notNull(),
+  action: varchar("action").notNull(), // upload, create_job, score_candidates, etc.
+  resourceType: varchar("resource_type"), // job, candidate, etc.
+  resourceId: integer("resource_id"),
+  metadata: jsonb("metadata"), // Additional action data
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 export const jobs = pgTable("jobs", {
   id: serial("id").primaryKey(),
@@ -13,6 +57,7 @@ export const jobs = pgTable("jobs", {
   }>().notNull(),
   status: text("status", { enum: ["draft", "active", "closed"] }).notNull().default("draft"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdBy: varchar("created_by").references(() => users.id),
 });
 
 export const candidates = pgTable("candidates", {
@@ -81,9 +126,33 @@ export const scores = pgTable("scores", {
 });
 
 // Relations
-export const jobsRelations = relations(jobs, ({ many }) => ({
+export const usersRelations = relations(users, ({ many }) => ({
+  jobs: many(jobs),
+  sessions: many(userSessions),
+  actions: many(userActions),
+}));
+
+export const jobsRelations = relations(jobs, ({ many, one }) => ({
   skills: many(jobSkills),
   scores: many(scores),
+  createdBy: one(users, {
+    fields: [jobs.createdBy],
+    references: [users.id],
+  }),
+}));
+
+export const userSessionsRelations = relations(userSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [userSessions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userActionsRelations = relations(userActions, ({ one }) => ({
+  user: one(users, {
+    fields: [userActions.userId],
+    references: [users.id],
+  }),
 }));
 
 export const candidatesRelations = relations(candidates, ({ many }) => ({
@@ -120,6 +189,7 @@ export const scoresRelations = relations(scores, ({ one }) => ({
 export const insertJobSchema = createInsertSchema(jobs).omit({
   id: true,
   createdAt: true,
+  createdBy: true,
 });
 
 export const insertCandidateSchema = createInsertSchema(candidates).omit({
@@ -142,6 +212,13 @@ export type JobSkill = typeof jobSkills.$inferSelect;
 export type Score = typeof scores.$inferSelect;
 export type InsertScore = z.infer<typeof insertScoreSchema>;
 
+// Auth types
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
+export type UserSession = typeof userSessions.$inferSelect;
+export type UserAction = typeof userActions.$inferSelect;
+export type InsertUserAction = typeof userActions.$inferInsert;
+
 export interface ScoreWeights {
   skills: number;
   title: number;
@@ -153,4 +230,27 @@ export interface ScoreWeights {
 export interface CandidateWithScore extends Candidate {
   score?: Score;
   skills: CandidateSkill[];
+}
+
+// Analytics interfaces
+export interface UserStats {
+  totalUsers: number;
+  activeUsers: number;
+  newUsersThisWeek: number;
+  adminUsers: number;
+}
+
+export interface UsageStats {
+  totalJobs: number;
+  totalCandidates: number;
+  totalUploads: number;
+  avgCandidatesPerJob: number;
+}
+
+export interface UserUsageDetail {
+  user: User;
+  jobsCreated: number;
+  candidatesUploaded: number;
+  lastActivity: Date | null;
+  totalSessions: number;
 }
