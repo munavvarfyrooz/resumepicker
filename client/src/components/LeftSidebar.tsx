@@ -14,7 +14,7 @@ import {
 import { Plus, Briefcase, Users, Trash2, MoreVertical } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 
 export default function LeftSidebar() {
   const [, setLocation] = useLocation();
@@ -116,14 +116,16 @@ export default function LeftSidebar() {
     <div className={`${sidebarCollapsed ? 'w-16' : 'w-80'} bg-surface border-r border-border flex flex-col h-screen transition-all duration-300`}>
       {/* Header */}
       <div className="p-6 border-b border-border flex-shrink-0">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <Briefcase className="w-5 h-5 text-white" />
+        <Link href="/">
+          <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity">
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <Briefcase className="w-5 h-5 text-white" />
+            </div>
+            {!sidebarCollapsed && (
+              <h1 className="text-xl font-semibold text-text-primary">SmartHire</h1>
+            )}
           </div>
-          {!sidebarCollapsed && (
-            <h1 className="text-xl font-semibold text-text-primary">SmartHire</h1>
-          )}
-        </div>
+        </Link>
       </div>
 
       {/* Navigation */}

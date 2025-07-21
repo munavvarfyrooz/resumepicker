@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "wouter";
+import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useAppStore } from "@/store/appStore";
 import LeftSidebar from "@/components/LeftSidebar";
@@ -203,12 +203,14 @@ export default function Dashboard() {
       {/* Mobile Header */}
       <div className="md:hidden bg-surface border-b border-border px-4 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-              <Briefcase className="w-4 h-4 text-white" />
+          <Link href="/">
+            <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                <Briefcase className="w-4 h-4 text-white" />
+              </div>
+              <h1 className="text-lg font-semibold text-text-primary">SmartHire</h1>
             </div>
-            <h1 className="text-lg font-semibold text-text-primary">SmartHire</h1>
-          </div>
+          </Link>
           <div className="flex space-x-1">
             <Button
               variant={view === 'ranking' ? 'default' : 'outline'}
