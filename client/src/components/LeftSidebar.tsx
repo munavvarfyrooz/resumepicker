@@ -34,7 +34,7 @@ export default function LeftSidebar() {
         title: 'New Job',
         description: '# Job Description\n\nWrite your job description here...',
         requirements: { must: [], nice: [] },
-        status: 'active', // Set to active by default
+        status: 'draft', // Start as draft until saved
       });
     },
     onSuccess: (newJob) => {
