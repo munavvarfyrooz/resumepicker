@@ -16,10 +16,10 @@ export default function Landing() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">SmartHire</h1>
           </div>
           <Button 
-            onClick={() => window.location.href = '/api/login'}
+            onClick={() => window.location.href = '/login'}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
-            Sign In
+            Login
           </Button>
         </div>
       </header>
@@ -41,10 +41,10 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => window.location.href = '/login'}
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
             >
-              Get Started Free
+              Get Started
             </Button>
             <Button 
               size="lg" 
@@ -172,10 +172,10 @@ export default function Landing() {
           </p>
           <Button 
             size="lg" 
-            onClick={() => window.location.href = '/api/login'}
+            onClick={() => window.location.href = '/login'}
             className="bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 text-lg"
           >
-            Start Your Free Trial
+            Start Now
           </Button>
         </div>
       </main>

@@ -24,7 +24,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isLoading && (!isAuthenticated || currentUser?.role !== 'admin')) {
       toast({
-        title: "Unauthorized",
+        title: "Access Required",
         description: "Admin access required. Redirecting to login...",
         variant: "destructive",
       });

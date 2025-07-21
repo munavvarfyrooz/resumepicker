@@ -9,6 +9,7 @@ import JDEditor from "@/pages/JDEditor";
 import Landing from "@/pages/Landing";
 import Home from "@/pages/Home";
 import AdminDashboard from "@/pages/AdminDashboard";
+import CustomLogin from "@/pages/CustomLogin";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -17,7 +18,10 @@ function Router() {
   return (
     <Switch>
       {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
+        <>
+          <Route path="/" component={Landing} />
+          <Route path="/login" component={CustomLogin} />
+        </>
       ) : (
         <>
           <Route path="/" component={Home} />
