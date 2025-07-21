@@ -116,9 +116,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Jobs endpoints (protected)
-  app.get('/api/jobs', isAuthenticated, async (req, res) => {
+  app.get('/api/jobs', isAuthenticated, async (req: any, res) => {
     try {
-      const jobs = await storage.getJobs();
+      const jobs = await storage.getJobs(req.user?.id);
       res.json(jobs);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch jobs' });
@@ -134,9 +134,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/jobs/:id', isAuthenticated, async (req, res) => {
+  app.get('/api/jobs/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const job = await storage.getJob(parseInt(req.params.id));
+      const job = await storage.getJob(parseInt(req.params.id), req.user?.id);
       if (!job) {
         return res.status(404).json({ error: 'Job not found' });
       }
@@ -151,12 +151,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertJobSchema.parse(req.body);
       const job = await storage.createJob({
         ...validatedData,
-        createdBy: req.user.claims.sub,
+        createdBy: req.user?.id,
       });
       
       // Log user action
       await storage.logUserAction({
-        userId: req.user.claims.sub,
+        userId: req.user?.id,
         action: 'create_job',
         resourceType: 'job',
         resourceId: job.id,
@@ -227,18 +227,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Candidates endpoints
-  app.get('/api/candidates', async (req, res) => {
+  app.get('/api/candidates', isAuthenticated, async (req: any, res) => {
     try {
-      const candidates = await storage.getCandidates();
+      const candidates = await storage.getCandidates(req.user?.id);
       res.json(candidates);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch candidates' });
     }
   });
 
-  app.get('/api/candidates/:id', async (req, res) => {
+  app.get('/api/candidates/:id', isAuthenticated, async (req: any, res) => {
     try {
-      const candidate = await storage.getCandidate(parseInt(req.params.id));
+      const candidate = await storage.getCandidate(parseInt(req.params.id), req.user?.id);
       if (!candidate) {
         return res.status(404).json({ error: 'Candidate not found' });
       }
@@ -260,7 +260,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // File upload endpoint with flexible field handling
-  app.post('/api/upload', (req, res, next) => {
+  app.post('/api/upload', isAuthenticated, (req, res, next) => {
     // Try both 'files' and 'file' field names to handle various upload scenarios
     const uploadHandler = upload.any();
     
@@ -301,8 +301,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const name = extractName(parsedCV.text) || file.originalname.replace(/\.[^/.]+$/, "");
           const email = extractEmail(parsedCV.text) || `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`;
 
-          // Check for duplicates by email or filename
-          const existingCandidates = await storage.getCandidates();
+          // Check for duplicates by email or filename (within user's candidates)
+          const existingCandidates = await storage.getCandidates((req as any).user?.id);
           const duplicateByEmail = existingCandidates.find(c => c.email === email);
           const duplicateByFilename = existingCandidates.find(c => c.fileName === file.originalname);
           
@@ -336,7 +336,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             experienceTimeline: parsedCV.experienceTimeline,
           };
 
-          const candidate = await storage.createCandidate(candidateData);
+          const candidate = await storage.createCandidate({
+            ...candidateData,
+            createdBy: (req as any).user?.id, // Add user association
+          });
 
           // Save skills
           await storage.setCandidateSkills(candidate.id, parsedCV.skills);
@@ -363,10 +366,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Scoring endpoints
-  app.get('/api/jobs/:jobId/candidates', async (req, res) => {
+  app.get('/api/jobs/:jobId/candidates', isAuthenticated, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.jobId);
-      const candidates = await storage.getCandidatesWithScores(jobId);
+      const candidates = await storage.getCandidatesWithScores(jobId, req.user?.id);
       res.json(candidates);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch candidates with scores' });

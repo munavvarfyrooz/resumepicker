@@ -52,18 +52,18 @@ export interface IStorage {
   getUserUsageDetails(): Promise<UserUsageDetail[]>;
   
   // Jobs
-  getJobs(): Promise<Job[]>;
-  getJob(id: number): Promise<Job | undefined>;
+  getJobs(userId?: string): Promise<Job[]>;
+  getJob(id: number, userId?: string): Promise<Job | undefined>;
   createJob(job: InsertJob): Promise<Job>;
   updateJob(id: number, job: Partial<InsertJob>): Promise<Job>;
   deleteJob(id: number): Promise<void>;
   
   // Candidates
-  getCandidates(): Promise<Candidate[]>;
-  getCandidate(id: number): Promise<Candidate | undefined>;
+  getCandidates(userId?: string): Promise<Candidate[]>;
+  getCandidate(id: number, userId?: string): Promise<Candidate | undefined>;
   createCandidate(candidate: InsertCandidate): Promise<Candidate>;
   deleteCandidate(id: number): Promise<void>;
-  getCandidatesWithScores(jobId: number): Promise<CandidateWithScore[]>;
+  getCandidatesWithScores(jobId: number, userId?: string): Promise<CandidateWithScore[]>;
   
   // Skills
   getCandidateSkills(candidateId: number): Promise<string[]>;
@@ -253,11 +253,18 @@ export class DatabaseStorage implements IStorage {
       totalSessions: row.totalSessions || 0,
     }));
   }
-  async getJobs(): Promise<Job[]> {
+  async getJobs(userId?: string): Promise<Job[]> {
+    if (userId) {
+      return await db.select().from(jobs).where(eq(jobs.createdBy, userId)).orderBy(desc(jobs.createdAt));
+    }
     return await db.select().from(jobs).orderBy(desc(jobs.createdAt));
   }
 
-  async getJob(id: number): Promise<Job | undefined> {
+  async getJob(id: number, userId?: string): Promise<Job | undefined> {
+    if (userId) {
+      const [job] = await db.select().from(jobs).where(and(eq(jobs.id, id), eq(jobs.createdBy, userId)));
+      return job || undefined;
+    }
     const [job] = await db.select().from(jobs).where(eq(jobs.id, id));
     return job || undefined;
   }
@@ -267,7 +274,8 @@ export class DatabaseStorage implements IStorage {
       title: job.title,
       description: job.description,
       requirements: job.requirements || { must: [], nice: [] },
-      status: job.status || 'draft'
+      status: job.status || 'draft',
+      createdBy: job.createdBy // Add user association
     };
     const [newJob] = await db.insert(jobs).values(insertData).returning();
     return newJob;
@@ -297,11 +305,18 @@ export class DatabaseStorage implements IStorage {
     await db.delete(jobs).where(eq(jobs.id, id));
   }
 
-  async getCandidates(): Promise<Candidate[]> {
+  async getCandidates(userId?: string): Promise<Candidate[]> {
+    if (userId) {
+      return await db.select().from(candidates).where(eq(candidates.createdBy, userId)).orderBy(desc(candidates.createdAt));
+    }
     return await db.select().from(candidates).orderBy(desc(candidates.createdAt));
   }
 
-  async getCandidate(id: number): Promise<Candidate | undefined> {
+  async getCandidate(id: number, userId?: string): Promise<Candidate | undefined> {
+    if (userId) {
+      const [candidate] = await db.select().from(candidates).where(and(eq(candidates.id, id), eq(candidates.createdBy, userId)));
+      return candidate || undefined;
+    }
     const [candidate] = await db.select().from(candidates).where(eq(candidates.id, id));
     return candidate || undefined;
   }
@@ -316,6 +331,7 @@ export class DatabaseStorage implements IStorage {
       extractedText: candidate.extractedText,
       yearsExperience: candidate.yearsExperience,
       lastRoleTitle: candidate.lastRoleTitle,
+      createdBy: candidate.createdBy, // Add user association
       experienceGaps: candidate.experienceGaps || [],
       experienceTimeline: candidate.experienceTimeline || []
     };
@@ -332,8 +348,13 @@ export class DatabaseStorage implements IStorage {
     await db.delete(candidates).where(eq(candidates.id, id));
   }
 
-  async getCandidatesWithScores(jobId: number): Promise<CandidateWithScore[]> {
-    const candidatesList = await db.select().from(candidates);
+  async getCandidatesWithScores(jobId: number, userId?: string): Promise<CandidateWithScore[]> {
+    let candidatesList;
+    if (userId) {
+      candidatesList = await db.select().from(candidates).where(eq(candidates.createdBy, userId));
+    } else {
+      candidatesList = await db.select().from(candidates);
+    }
     const candidatesWithScores: CandidateWithScore[] = [];
 
     for (const candidate of candidatesList) {

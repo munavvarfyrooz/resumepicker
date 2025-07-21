@@ -72,6 +72,7 @@ export const candidates = pgTable("candidates", {
   extractedText: text("extracted_text").notNull(),
   yearsExperience: real("years_experience"),
   lastRoleTitle: text("last_role_title"),
+  createdBy: varchar("created_by").references(() => users.id).notNull(),
   experienceGaps: jsonb("experience_gaps").$type<Array<{
     start: string;
     end: string;
