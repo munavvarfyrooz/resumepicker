@@ -462,13 +462,13 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(scores.candidateId, candidateId), eq(scores.jobId, jobId)));
   }
 
-  async getCandidateCountsByJob(): Promise<Record<number, number>> {
-    // Get all candidates with scores grouped by job
-    const allJobs = await this.getJobs();
+  async getCandidateCountsByJob(userId?: string): Promise<Record<number, number>> {
+    // Get user's jobs only when userId is provided
+    const allJobs = await this.getJobs(userId);
     const counts: Record<number, number> = {};
     
     for (const job of allJobs) {
-      const candidatesWithScores = await this.getCandidatesWithScores(job.id);
+      const candidatesWithScores = await this.getCandidatesWithScores(job.id, userId);
       counts[job.id] = candidatesWithScores.length;
     }
     

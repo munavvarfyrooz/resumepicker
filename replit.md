@@ -146,6 +146,9 @@ The application requires the following environment variables:
 - **Home Dashboard**: Built personalized home page for authenticated users with quick actions and getting started guidance
 - **Session Management**: Implemented secure session handling with PostgreSQL storage and automatic token refresh
 - **User Interface Updates**: Enhanced UI with authentication state management and proper routing based on user status
+- **Navigation Simplification**: Streamlined UI to single dashboard approach, removed multiple confusing navigation options
+- **Job Status Fix**: Jobs now default to 'active' status instead of 'draft' for better user experience
+- **Data Isolation Enhancement**: Fixed candidate count endpoint to properly filter by user context, preventing display of other users' data
 
 ### Deployment
 The system is built to scale horizontally with stateless backend services and can be deployed on platforms like Railway, Vercel, or traditional VPS environments.

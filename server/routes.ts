@@ -125,9 +125,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/jobs/candidate-counts', isAuthenticated, async (req, res) => {
+  app.get('/api/jobs/candidate-counts', isAuthenticated, async (req: any, res) => {
     try {
-      const counts = await storage.getCandidateCountsByJob();
+      const counts = await storage.getCandidateCountsByJob(req.user?.id);
       res.json(counts);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch candidate counts' });
