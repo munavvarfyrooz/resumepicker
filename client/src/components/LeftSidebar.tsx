@@ -34,11 +34,10 @@ export default function LeftSidebar() {
         title: 'New Job',
         description: '# Job Description\n\nWrite your job description here...',
         requirements: { must: [], nice: [] },
-        status: 'draft',
+        status: 'active', // Set to active by default
       });
     },
-    onSuccess: (response) => {
-      const newJob = response.json();
+    onSuccess: (newJob) => {
       queryClient.invalidateQueries({ queryKey: ['/api/jobs'] });
       toast({
         title: "Success",

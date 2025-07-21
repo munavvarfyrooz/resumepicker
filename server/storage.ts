@@ -274,7 +274,7 @@ export class DatabaseStorage implements IStorage {
       title: job.title,
       description: job.description,
       requirements: job.requirements || { must: [], nice: [] },
-      status: job.status || 'draft',
+      status: job.status || 'active', // Default to active instead of draft
       createdBy: job.createdBy // Add user association
     };
     const [newJob] = await db.insert(jobs).values(insertData).returning();

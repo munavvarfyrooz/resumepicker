@@ -142,7 +142,7 @@ export default function JDEditor() {
         must: mustHaveSkills,
         nice: niceToHaveSkills,
       },
-      status: job?.status || 'draft',
+      status: job?.status || 'active', // Default to active for new jobs
     };
 
     saveJobMutation.mutate(jobData);
