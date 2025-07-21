@@ -14,12 +14,15 @@ import NotFound from "@/pages/not-found";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  
+  // Check if we should show login page
+  const shouldShowLogin = new URLSearchParams(window.location.search).get('redirect') === 'login';
 
   return (
     <Switch>
       {isLoading || !isAuthenticated ? (
         <>
-          <Route path="/" component={Landing} />
+          <Route path="/" component={shouldShowLogin ? CustomLogin : Landing} />
           <Route path="/login" component={CustomLogin} />
         </>
       ) : (
