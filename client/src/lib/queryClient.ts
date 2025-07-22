@@ -55,6 +55,10 @@ export const queryClient = new QueryClient({
     },
     mutations: {
       retry: false,
+      onError: (error) => {
+        console.warn('Mutation error:', error);
+      },
     },
   },
+
 });

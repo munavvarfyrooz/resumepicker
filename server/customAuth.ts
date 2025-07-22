@@ -120,7 +120,7 @@ export function setupCustomAuth(app: Express) {
         firstName,
         lastName,
         role: 'user',
-        status: 'active',
+        isActive: true,
       });
 
       req.login(user, (err) => {

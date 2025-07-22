@@ -13,6 +13,7 @@ import {
   type Score, 
   type User,
   type UpsertUser,
+  type InsertUser,
   type UserSession,
   type UserAction,
   type InsertUserAction,
@@ -54,7 +55,7 @@ export interface IStorage {
   // Jobs
   getJobs(userId?: string): Promise<Job[]>;
   getJob(id: number, userId?: string): Promise<Job | undefined>;
-  createJob(job: InsertJob): Promise<Job>;
+  createJob(job: InsertJob & { createdBy: string }): Promise<Job>;
   updateJob(id: number, job: Partial<InsertJob>): Promise<Job>;
   deleteJob(id: number): Promise<void>;
   
@@ -269,15 +270,14 @@ export class DatabaseStorage implements IStorage {
     return job || undefined;
   }
 
-  async createJob(job: InsertJob): Promise<Job> {
-    const insertData: any = {
-      title: job.title,
-      description: job.description,
-      requirements: job.requirements || { must: [], nice: [] },
-      status: job.status || 'draft', // Default to draft, becomes active when saved
-      createdBy: job.createdBy // Add user association
-    };
-    const [newJob] = await db.insert(jobs).values(insertData).returning();
+  async createJob(jobData: InsertJob & { createdBy: string }): Promise<Job> {
+    const [newJob] = await db.insert(jobs).values({
+      title: jobData.title,
+      description: jobData.description,
+      requirements: jobData.requirements || { must: [], nice: [] },
+      status: jobData.status || 'draft',
+      createdBy: jobData.createdBy
+    }).returning();
     return newJob;
   }
 
