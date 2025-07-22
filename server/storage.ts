@@ -300,11 +300,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createJob(jobData: InsertJob & { createdBy: string }): Promise<Job> {
+    // Validate required fields
+    if (!jobData.title || jobData.title.trim() === '') {
+      throw new Error('Job title is required');
+    }
+    if (!jobData.description || jobData.description.trim() === '') {
+      throw new Error('Job description is required');
+    }
+
     const [newJob] = await db.insert(jobs).values({
-      title: jobData.title,
-      description: jobData.description,
+      title: jobData.title.trim(),
+      description: jobData.description.trim(),
       requirements: jobData.requirements || { must: [], nice: [] },
-      status: jobData.status || 'draft',
+      status: jobData.status || 'active', // Default to active instead of draft
       createdBy: jobData.createdBy
     }).returning();
     return newJob;

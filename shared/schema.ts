@@ -193,6 +193,9 @@ export const insertJobSchema = createInsertSchema(jobs).omit({
   id: true,
   createdAt: true,
   createdBy: true,
+}).extend({
+  title: z.string().min(1, "Job title is required").trim(),
+  description: z.string().min(1, "Job description is required").trim(),
 });
 
 export const insertCandidateSchema = createInsertSchema(candidates).omit({
