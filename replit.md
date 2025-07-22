@@ -151,6 +151,8 @@ The application requires the following environment variables:
 - **Data Isolation Enhancement**: Fixed candidate count endpoint to properly filter by user context, preventing display of other users' data
 - **Admin Login Fix**: Resolved admin authentication issues by updating password hash format and improving error handling
 - **Plugin Error Resolution**: Fixed apiRequest parameter order issues in AdminDashboard that caused unhandled promise rejections
+- **Session Tracking Implementation**: Fixed login tracking system to properly update last login timestamps and create user session records
+- **Analytics Data Correction**: Resolved incorrect candidate upload counts by fixing database join queries in usage analytics
 - **Code Quality Improvements**: Enhanced error handling, fixed TypeScript issues, and improved app stability
 
 ### Deployment

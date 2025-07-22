@@ -240,29 +240,47 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserUsageDetails(): Promise<UserUsageDetail[]> {
-    const userUsage = await db
+    // Get all users first
+    const allUsers = await db.select().from(users).orderBy(desc(users.lastLoginAt));
+    
+    // Get jobs count per user
+    const jobCounts = await db
       .select({
-        user: users,
-        jobsCreated: sql<number>`count(distinct ${jobs.id})`.as('jobs_created'),
-        candidatesUploaded: sql<number>`count(distinct ${userActions.id})`.as('candidates_uploaded'),
-        totalSessions: sql<number>`count(distinct ${userSessions.id})`.as('total_sessions'),
+        userId: jobs.createdBy,
+        count: sql<number>`count(*)`.as('count')
       })
-      .from(users)
-      .leftJoin(jobs, eq(jobs.createdBy, users.id))
-      .leftJoin(userActions, and(
-        eq(userActions.userId, users.id),
-        eq(userActions.action, 'upload')
-      ))
-      .leftJoin(userSessions, eq(userSessions.userId, users.id))
-      .groupBy(users.id)
-      .orderBy(desc(users.lastLoginAt));
+      .from(jobs)
+      .groupBy(jobs.createdBy);
+    
+    // Get candidates count per user
+    const candidateCounts = await db
+      .select({
+        userId: candidates.createdBy,
+        count: sql<number>`count(*)`.as('count')
+      })
+      .from(candidates)
+      .groupBy(candidates.createdBy);
+    
+    // Get sessions count per user
+    const sessionCounts = await db
+      .select({
+        userId: userSessions.userId,
+        count: sql<number>`count(*)`.as('count')
+      })
+      .from(userSessions)
+      .groupBy(userSessions.userId);
 
-    return userUsage.map(row => ({
-      user: row.user,
-      jobsCreated: row.jobsCreated || 0,
-      candidatesUploaded: row.candidatesUploaded || 0,
-      lastActivity: row.user.lastLoginAt,
-      totalSessions: row.totalSessions || 0,
+    // Create lookup maps
+    const jobCountMap = new Map(jobCounts.map(j => [j.userId, j.count]));
+    const candidateCountMap = new Map(candidateCounts.map(c => [c.userId, c.count]));
+    const sessionCountMap = new Map(sessionCounts.map(s => [s.userId, s.count]));
+
+    return allUsers.map(user => ({
+      user,
+      jobsCreated: jobCountMap.get(user.id) || 0,
+      candidatesUploaded: candidateCountMap.get(user.id) || 0,
+      lastActivity: user.lastLoginAt,
+      totalSessions: sessionCountMap.get(user.id) || 0,
     }));
   }
   async getJobs(userId?: string): Promise<Job[]> {
