@@ -47,6 +47,9 @@ export function getSession() {
     tableName: "sessions",
   });
   
+  const isProduction = process.env.NODE_ENV === 'production';
+  console.log('Session config - NODE_ENV:', process.env.NODE_ENV, 'isProduction:', isProduction);
+  
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
@@ -54,8 +57,9 @@ export function getSession() {
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Always false for Replit environment
       maxAge: sessionTtl,
+      sameSite: 'lax',
     },
   });
 }
@@ -96,29 +100,48 @@ export function setupCustomAuth(app: Express) {
     res.redirect("/?redirect=login");
   });
 
-  // Login endpoint
-  app.post("/api/login", passport.authenticate("local"), async (req, res) => {
-    try {
-      // Update last login time and create session record
-      if (req.user) {
-        await storage.updateUserLastLogin(req.user.id);
-        await storage.createUserSession(
-          req.user.id, 
-          req.ip, 
-          req.get('User-Agent')
-        );
-        await storage.logUserAction({
-          userId: req.user.id,
-          action: 'login',
-          resourceType: 'auth',
-          metadata: { ip: req.ip, userAgent: req.get('User-Agent') }
-        });
+  // Login endpoint with debugging
+  app.post("/api/login", (req, res, next) => {
+    console.log('Login attempt for username:', req.body.username);
+    passport.authenticate("local", (err, user, info) => {
+      if (err) {
+        console.error('Authentication error:', err);
+        return res.status(500).json({ message: 'Internal server error' });
       }
-      res.status(200).json(req.user);
-    } catch (error) {
-      console.error('Login tracking error:', error);
-      res.status(200).json(req.user); // Still return success even if tracking fails
-    }
+      if (!user) {
+        console.log('Authentication failed:', info);
+        return res.status(401).json({ message: info?.message || 'Invalid credentials' });
+      }
+      
+      req.login(user, async (loginErr) => {
+        if (loginErr) {
+          console.error('Login error:', loginErr);
+          return res.status(500).json({ message: 'Login failed' });
+        }
+        
+        console.log('Login successful for user:', user.username);
+        try {
+          // Update last login time and create session record
+          await storage.updateUserLastLogin(user.id);
+          await storage.createUserSession(
+            user.id, 
+            req.ip, 
+            req.get('User-Agent')
+          );
+          await storage.logUserAction({
+            userId: user.id,
+            action: 'login',
+            resourceType: 'auth',
+            metadata: { ip: req.ip, userAgent: req.get('User-Agent') }
+          });
+          
+          res.status(200).json(user);
+        } catch (error) {
+          console.error('Login tracking error:', error);
+          res.status(200).json(user); // Still return success even if tracking fails
+        }
+      });
+    })(req, res, next);
   });
 
   // Register endpoint
