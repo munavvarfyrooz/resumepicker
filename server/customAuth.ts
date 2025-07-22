@@ -73,12 +73,34 @@ export function setupCustomAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
+        if (process.env.NODE_ENV === 'production') {
+          console.log('[PROD DEBUG] Login attempt for:', username);
+        }
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        if (!user) {
+          if (process.env.NODE_ENV === 'production') {
+            console.log('[PROD DEBUG] User not found in database');
+          }
           return done(null, false, { message: "Invalid credentials" });
+        }
+        if (process.env.NODE_ENV === 'production') {
+          console.log('[PROD DEBUG] User found, password length:', user.password?.length);
+        }
+        const passwordMatch = await comparePasswords(password, user.password);
+        if (!passwordMatch) {
+          if (process.env.NODE_ENV === 'production') {
+            console.log('[PROD DEBUG] Password comparison failed');
+          }
+          return done(null, false, { message: "Invalid credentials" });
+        }
+        if (process.env.NODE_ENV === 'production') {
+          console.log('[PROD DEBUG] Authentication successful');
         }
         return done(null, user);
       } catch (error) {
+        if (process.env.NODE_ENV === 'production') {
+          console.error('[PROD DEBUG] LocalStrategy error:', error);
+        }
         return done(error);
       }
     })
