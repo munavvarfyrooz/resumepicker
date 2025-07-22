@@ -48,7 +48,6 @@ export function getSession() {
   });
   
   const isProduction = process.env.NODE_ENV === 'production';
-  console.log('Session config - NODE_ENV:', process.env.NODE_ENV, 'isProduction:', isProduction);
   
   return session({
     secret: process.env.SESSION_SECRET!,
@@ -100,26 +99,20 @@ export function setupCustomAuth(app: Express) {
     res.redirect("/?redirect=login");
   });
 
-  // Login endpoint with debugging
+  // Login endpoint
   app.post("/api/login", (req, res, next) => {
-    console.log('Login attempt for username:', req.body.username);
     passport.authenticate("local", (err, user, info) => {
       if (err) {
-        console.error('Authentication error:', err);
         return res.status(500).json({ message: 'Internal server error' });
       }
       if (!user) {
-        console.log('Authentication failed:', info);
         return res.status(401).json({ message: info?.message || 'Invalid credentials' });
       }
       
       req.login(user, async (loginErr) => {
         if (loginErr) {
-          console.error('Login error:', loginErr);
           return res.status(500).json({ message: 'Login failed' });
         }
-        
-        console.log('Login successful for user:', user.username);
         try {
           // Update last login time and create session record
           await storage.updateUserLastLogin(user.id);
