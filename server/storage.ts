@@ -39,6 +39,7 @@ export interface IStorage {
   getAllUsers(): Promise<User[]>;
   updateUserRole(userId: string, role: 'user' | 'admin'): Promise<User>;
   updateUserStatus(userId: string, isActive: boolean): Promise<User>;
+  updateUserLastLogin(userId: string): Promise<User>;
   
   // Session tracking
   createUserSession(userId: string, ipAddress?: string, userAgent?: string): Promise<UserSession>;
@@ -140,6 +141,15 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async updateUserLastLogin(userId: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ lastLoginAt: new Date(), updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
   // Session tracking
   async createUserSession(userId: string, ipAddress?: string, userAgent?: string): Promise<UserSession> {
     const [session] = await db
@@ -148,6 +158,7 @@ export class DatabaseStorage implements IStorage {
         userId,
         ipAddress,
         userAgent,
+        sessionStart: new Date(),
       })
       .returning();
     return session;

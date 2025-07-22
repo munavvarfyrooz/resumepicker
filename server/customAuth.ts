@@ -97,8 +97,28 @@ export function setupCustomAuth(app: Express) {
   });
 
   // Login endpoint
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+  app.post("/api/login", passport.authenticate("local"), async (req, res) => {
+    try {
+      // Update last login time and create session record
+      if (req.user) {
+        await storage.updateUserLastLogin(req.user.id);
+        await storage.createUserSession(
+          req.user.id, 
+          req.ip, 
+          req.get('User-Agent')
+        );
+        await storage.logUserAction({
+          userId: req.user.id,
+          action: 'login',
+          resourceType: 'auth',
+          metadata: { ip: req.ip, userAgent: req.get('User-Agent') }
+        });
+      }
+      res.status(200).json(req.user);
+    } catch (error) {
+      console.error('Login tracking error:', error);
+      res.status(200).json(req.user); // Still return success even if tracking fails
+    }
   });
 
   // Register endpoint
