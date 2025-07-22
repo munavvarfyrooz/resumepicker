@@ -24,13 +24,18 @@ async function hashPassword(password: string) {
 
 async function comparePasswords(supplied: string, stored: string) {
   try {
+    console.log('comparePasswords: supplied length:', supplied.length, 'stored length:', stored.length);
     const [hashed, salt] = stored.split(".");
     if (!hashed || !salt) {
+      console.log('comparePasswords: invalid format');
       return false;
     }
+    console.log('comparePasswords: hash length:', hashed.length, 'salt length:', salt.length);
     const hashedBuf = Buffer.from(hashed, "hex");
     const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-    return timingSafeEqual(hashedBuf, suppliedBuf);
+    const result = timingSafeEqual(hashedBuf, suppliedBuf);
+    console.log('comparePasswords: result:', result);
+    return result;
   } catch (error) {
     console.error("Password comparison error:", error);
     return false;
@@ -73,12 +78,24 @@ export function setupCustomAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
+        console.log('LocalStrategy: looking up user:', username);
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        if (!user) {
+          console.log('LocalStrategy: user not found');
           return done(null, false, { message: "Invalid credentials" });
         }
+        
+        console.log('LocalStrategy: user found, checking password');
+        const passwordMatch = await comparePasswords(password, user.password);
+        if (!passwordMatch) {
+          console.log('LocalStrategy: password mismatch');
+          return done(null, false, { message: "Invalid credentials" });
+        }
+        
+        console.log('LocalStrategy: authentication successful');
         return done(null, user);
       } catch (error) {
+        console.error('LocalStrategy error:', error);
         return done(error);
       }
     })
@@ -101,18 +118,24 @@ export function setupCustomAuth(app: Express) {
 
   // Login endpoint
   app.post("/api/login", (req, res, next) => {
+    console.log('Production login attempt:', req.body.username, 'NODE_ENV:', process.env.NODE_ENV);
     passport.authenticate("local", (err, user, info) => {
       if (err) {
+        console.error('Auth error:', err);
         return res.status(500).json({ message: 'Internal server error' });
       }
       if (!user) {
+        console.log('Auth failed in production:', info);
         return res.status(401).json({ message: info?.message || 'Invalid credentials' });
       }
       
       req.login(user, async (loginErr) => {
         if (loginErr) {
+          console.error('Login error:', loginErr);
           return res.status(500).json({ message: 'Login failed' });
         }
+        
+        console.log('Production login successful:', user.username);
         try {
           // Update last login time and create session record
           await storage.updateUserLastLogin(user.id);
