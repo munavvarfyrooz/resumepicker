@@ -135,7 +135,7 @@ The application requires the following environment variables:
 
 ## Recent Changes
 
-### Latest Updates (July 21, 2025)
+### Latest Updates (July 22, 2025)
 - **Authentication System**: Implemented secure Replit Auth with OpenID Connect for user login/logout functionality
 - **Admin Dashboard**: Created comprehensive admin panel with user management, analytics, and system monitoring capabilities
 - **User Role Management**: Added role-based access control with user/admin permissions and status management
@@ -149,6 +149,9 @@ The application requires the following environment variables:
 - **Navigation Simplification**: Streamlined UI to single dashboard approach, removed multiple confusing navigation options
 - **Job Status Fix**: Jobs now default to 'active' status instead of 'draft' for better user experience
 - **Data Isolation Enhancement**: Fixed candidate count endpoint to properly filter by user context, preventing display of other users' data
+- **Admin Login Fix**: Resolved admin authentication issues by updating password hash format and improving error handling
+- **Plugin Error Resolution**: Fixed apiRequest parameter order issues in AdminDashboard that caused unhandled promise rejections
+- **Code Quality Improvements**: Enhanced error handling, fixed TypeScript issues, and improved app stability
 
 ### Deployment
 The system is built to scale horizontally with stateless backend services and can be deployed on platforms like Railway, Vercel, or traditional VPS environments.

@@ -63,10 +63,7 @@ export default function AdminDashboard() {
   // Mutations
   const updateRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: 'user' | 'admin' }) => {
-      await apiRequest(`/api/admin/users/${userId}/role`, {
-        method: "PATCH",
-        body: { role },
-      });
+      await apiRequest("PATCH", `/api/admin/users/${userId}/role`, { role });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -98,10 +95,7 @@ export default function AdminDashboard() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
-      await apiRequest(`/api/admin/users/${userId}/status`, {
-        method: "PATCH",
-        body: { isActive },
-      });
+      await apiRequest("PATCH", `/api/admin/users/${userId}/status`, { isActive });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
