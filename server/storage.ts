@@ -511,6 +511,11 @@ export class DatabaseStorage implements IStorage {
     
     return counts;
   }
+  async updateUserLastLogin(userId: string): Promise<void> {
+    await db.update(users)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(users.id, userId));
+  }
 }
 
 export const storage = new DatabaseStorage();
