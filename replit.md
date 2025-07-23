@@ -137,7 +137,7 @@ The application requires the following environment variables:
 
 ### Latest Updates (July 23, 2025)
 - **Authentication System Complete**: Built entirely new simple authentication system from scratch after previous complex system failed
-- **Admin Login Working**: Successfully created working admin credentials (admin/admin123) that work in both development and production
+- **Admin Login Working**: Successfully created working admin credentials with strong generated password that work in both development and production
 - **Admin Dashboard**: Created comprehensive admin panel with user management, analytics, and system monitoring capabilities
 - **User Role Management**: Added role-based access control with user/admin permissions and status management
 - **Usage Analytics**: Implemented detailed analytics tracking user sessions, job creation, candidate uploads, and system usage
