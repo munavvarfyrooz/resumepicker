@@ -45,7 +45,18 @@ export default function Home() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.location.href = '/api/logout'}
+                onClick={async () => {
+                  try {
+                    const response = await fetch('/api/logout', { method: 'POST' });
+                    if (response.ok) {
+                      window.location.href = '/';
+                    }
+                  } catch (error) {
+                    console.error('Logout failed:', error);
+                    // Fallback to direct navigation
+                    window.location.href = '/api/logout';
+                  }
+                }}
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
