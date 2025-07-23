@@ -11,7 +11,7 @@ import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -160,6 +160,14 @@ export default function AuthPage() {
                       >
                         {loginMutation.isPending ? "Signing in..." : "Sign In"}
                       </Button>
+                      
+                      <div className="text-center">
+                        <Link href="/forgot-password">
+                          <Button variant="ghost" className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                            Forgot your password?
+                          </Button>
+                        </Link>
+                      </div>
                     </form>
                   </Form>
                 </TabsContent>

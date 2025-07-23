@@ -7,6 +7,7 @@ import {
   users,
   userSessions,
   userActions,
+  passwordResetTokens,
   type Job, 
   type Candidate, 
   type CandidateWithScore, 
@@ -23,17 +24,27 @@ import {
   type ScoreWeights,
   type UserStats,
   type UsageStats,
-  type UserUsageDetail
+  type UserUsageDetail,
+  type PasswordResetToken,
+  type InsertPasswordResetToken
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, count, sql, gte } from "drizzle-orm";
+import { eq, desc, and, count, sql, gte, isNull } from "drizzle-orm";
 
 export interface IStorage {
   // Authentication
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUserPassword(userId: string, password: string): Promise<User>;
+  
+  // Password reset
+  createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<PasswordResetToken>;
+  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
+  markTokenAsUsed(tokenId: string): Promise<void>;
+  cleanupExpiredTokens(): Promise<void>;
   
   // User management
   getAllUsers(): Promise<User[]>;
@@ -94,6 +105,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
   async createUser(userData: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(userData).returning();
     return user;
@@ -116,6 +132,55 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async updateUserPassword(userId: string, password: string): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({ password, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    return user;
+  }
+
+  // Password reset methods
+  async createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<PasswordResetToken> {
+    const [resetToken] = await db
+      .insert(passwordResetTokens)
+      .values({
+        userId,
+        token,
+        expiresAt,
+      })
+      .returning();
+    return resetToken;
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    const [resetToken] = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(
+        and(
+          eq(passwordResetTokens.token, token),
+          gte(passwordResetTokens.expiresAt, new Date()),
+          isNull(passwordResetTokens.usedAt)
+        )
+      );
+    return resetToken;
+  }
+
+  async markTokenAsUsed(tokenId: string): Promise<void> {
+    await db
+      .update(passwordResetTokens)
+      .set({ usedAt: new Date() })
+      .where(eq(passwordResetTokens.id, tokenId));
+  }
+
+  async cleanupExpiredTokens(): Promise<void> {
+    await db
+      .delete(passwordResetTokens)
+      .where(gte(new Date(), passwordResetTokens.expiresAt));
   }
 
   // User management methods
