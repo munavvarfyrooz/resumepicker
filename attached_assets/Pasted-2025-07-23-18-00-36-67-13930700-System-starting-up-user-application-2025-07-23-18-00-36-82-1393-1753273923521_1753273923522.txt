@@ -1,0 +1,92 @@
+2025-07-23 18:00:36.67
+13930700
+System
+starting up user application
+2025-07-23 18:00:36.82
+13930700
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2025-07-23 18:00:37.78
+13930700
+User
+> rest-express@1.0.0 start
+2025-07-23 18:00:37.78
+13930700
+User
+> NODE_ENV=production node dist/index.js
+2025-07-23 18:00:39.22
+13930700
+User
+[AUTH] Admin user already exists
+2025-07-23 18:00:39.30
+13930700
+User
+12:30:39 PM [express] serving on port 5000
+2025-07-23 18:00:40.60
+2671e2d9
+System
+system: received signal terminated
+2025-07-23 18:00:51.13
+13930700
+User
+[AUTH] Login attempt for: admin
+2025-07-23 18:00:51.24
+13930700
+User
+[AUTH] User found, checking password...
+2025-07-23 18:00:51.28
+13930700
+User
+[AUTH] Invalid password for: admin
+2025-07-23 18:00:51.29
+13930700
+User
+12:30:51 PM [express] POST /api/login 401 in 152ms :: {"message":"Invalid credentials"}
+2025-07-23 18:00:53.87
+13930700
+User
+[AUTH] Login attempt for: admin
+2025-07-23 18:00:53.89
+13930700
+User
+[AUTH] User found, checking password...
+2025-07-23 18:00:53.94
+13930700
+User
+[AUTH] Invalid password for: admin
+2025-07-23 18:00:53.94
+13930700
+User
+12:30:53 PM [express] POST /api/login 401 in 67ms :: {"message":"Invalid credentials"}
+2025-07-23 18:00:59.51
+13930700
+User
+12:30:59 PM [express] GET /api/auth/user 401 in 1ms :: {"message":"Unauthorized"}
+2025-07-23 18:01:04.60
+13930700
+User
+[AUTH] Login attempt for: admin
+2025-07-23 18:01:04.70
+13930700
+User
+[AUTH] User found, checking password...
+2025-07-23 18:01:04.77
+13930700
+User
+[AUTH] Login successful for: admin
+2025-07-23 18:01:04.99
+13930700
+User
+12:31:04 PM [express] POST /api/login 200 in 385ms :: {"id":"admin-simple","username":"admin","email"…
+2025-07-23 18:01:05.55
+13930700
+User
+12:31:05 PM [express] GET /api/auth/user 304 in 65ms :: {"id":"admin-simple","username":"admin","emai…
+2025-07-23 18:01:07.86
+13930700
+User
+12:31:07 PM [express] POST /api/logout 200 in 46ms :: {"message":"Logged out successfully"}
+2025-07-23 18:01:09.19
+13930700
+User
+12:31:09 PM [express] GET /api/auth/user 401 in 0ms :: {"message":"Unauthorized"}
