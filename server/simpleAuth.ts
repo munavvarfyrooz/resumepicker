@@ -95,17 +95,27 @@ export function setupSimpleAuth(app: Express) {
     }
   });
 
-  // Logout endpoint
-  app.post("/api/logout", (req: Request, res: Response) => {
+  // Logout endpoint - support both GET and POST
+  const logoutHandler = (req: Request, res: Response) => {
     req.session.destroy((err) => {
       if (err) {
         console.error("[AUTH] Logout error:", err);
         return res.status(500).json({ message: "Could not log out" });
       }
       res.clearCookie("connect.sid");
-      res.json({ message: "Logged out successfully" });
+      
+      // For GET requests (browser navigation), redirect to home
+      if (req.method === 'GET') {
+        res.redirect('/');
+      } else {
+        // For POST requests (API calls), return JSON
+        res.json({ message: "Logged out successfully" });
+      }
     });
-  });
+  };
+  
+  app.post("/api/logout", logoutHandler);
+  app.get("/api/logout", logoutHandler);
 
   // Get current user
   app.get("/api/auth/user", async (req: Request, res: Response) => {
