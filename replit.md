@@ -162,6 +162,7 @@ The application requires the following environment variables:
 - **Production Ready**: Admin authentication now works reliably in production environment with proper password hashing and session management
 - **Logout Fix**: Updated logout buttons to use proper POST requests instead of browser navigation, eliminating 404 errors
 - **Password Hash Migration**: Fixed legacy password hash format compatibility for existing users (fyru, admin-prod)
+- **Admin Password Security**: Updated admin accounts with strong password "Admin2025!Strong" using proper hash generation and verification
 
 ### Deployment
 The system is built to scale horizontally with stateless backend services and can be deployed on platforms like Railway, Vercel, or traditional VPS environments.
