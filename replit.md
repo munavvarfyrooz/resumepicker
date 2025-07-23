@@ -160,6 +160,8 @@ The application requires the following environment variables:
 - **Code Quality Improvements**: Enhanced error handling, fixed TypeScript issues, and improved app stability
 - **Authentication Rewrite**: Completely rebuilt authentication system using simple session-based approach instead of complex passport/openid stack
 - **Production Ready**: Admin authentication now works reliably in production environment with proper password hashing and session management
+- **Logout Fix**: Updated logout buttons to use proper POST requests instead of browser navigation, eliminating 404 errors
+- **Password Hash Migration**: Fixed legacy password hash format compatibility for existing users (fyru, admin-prod)
 
 ### Deployment
 The system is built to scale horizontally with stateless backend services and can be deployed on platforms like Railway, Vercel, or traditional VPS environments.

@@ -15,9 +15,48 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const [salt, key] = hash.split(":");
-  const derivedKey = (await scryptAsync(password, salt, 64)) as Buffer;
-  return timingSafeEqual(Buffer.from(key, "hex"), derivedKey);
+  try {
+    // Check if hash is valid
+    if (!hash || typeof hash !== 'string') {
+      console.error('[AUTH] Invalid password hash provided');
+      return false;
+    }
+
+    // Handle both old format (dot separator) and new format (colon separator)
+    let salt: string, key: string;
+    
+    if (hash.includes('.')) {
+      // Old format: key.salt
+      const parts = hash.split('.');
+      if (parts.length !== 2) {
+        console.error('[AUTH] Invalid old format password hash');
+        return false;
+      }
+      [key, salt] = parts;
+    } else if (hash.includes(':')) {
+      // New format: salt:key
+      const parts = hash.split(':');
+      if (parts.length !== 2) {
+        console.error('[AUTH] Invalid new format password hash');
+        return false;
+      }
+      [salt, key] = parts;
+    } else {
+      console.error('[AUTH] Unrecognized password hash format');
+      return false;
+    }
+
+    if (!salt || !key) {
+      console.error('[AUTH] Missing salt or key in password hash');
+      return false;
+    }
+
+    const derivedKey = (await scryptAsync(password, salt, 64)) as Buffer;
+    return timingSafeEqual(Buffer.from(key, "hex"), derivedKey);
+  } catch (error) {
+    console.error('[AUTH] Password verification error:', error);
+    return false;
+  }
 }
 
 // Simple session management
