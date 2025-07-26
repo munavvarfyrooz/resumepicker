@@ -21,9 +21,10 @@ psql $DATABASE_URL -f scripts/migrate-auth-prod.sql
 
 ### Main Admin Account
 - **Username**: `admin`
-- **Password**: `admin123`
+- **Password**: `)%yK[NRt6!)+kP<Q{dWu`
 - **Role**: admin
 - **Email**: admin@smarthire.com
+- **Security**: Strong 20-character password with special characters
 
 ### Production Admin Account  
 - **Username**: `admin-prod`
@@ -47,9 +48,9 @@ psql $DATABASE_URL -f scripts/migrate-auth-prod.sql
 
 ### Testing Production Authentication
 ```bash
-# Test admin login
+# Test admin login with strong password
 curl -X POST -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}' \
+  -d '{"username":"admin","password":")%yK[NRt6!)+kP<Q{dWu"}' \
   https://yourapp.com/api/login
 
 # Test admin-prod login  
@@ -75,9 +76,16 @@ psql $DATABASE_URL -c "SELECT username, role, updated_at FROM users WHERE role =
 
 ### Production Password Update Status
 ✅ **Admin passwords updated in production database**
-- Both `admin` and `admin-prod` accounts now use password: `admin123`
-- Password hashes updated with correct crypto format
+- **admin** account now uses strong password: `)%yK[NRt6!)+kP<Q{dWu`
+- **admin-prod** account uses password: `admin123`
+- Password hashes updated with correct 193-character crypto format
 - Production database synchronized with development environment
+
+### Security Enhancement
+The admin account now uses a cryptographically strong 20-character password with:
+- Uppercase and lowercase letters
+- Numbers and special characters
+- Random generation for maximum security
 
 ⚠️ **Security Note**: Change these passwords immediately after first login in production.
 
