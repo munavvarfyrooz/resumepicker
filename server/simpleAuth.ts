@@ -223,79 +223,7 @@ export function setupSimpleAuth(app: Express) {
   app.post("/api/logout", logoutHandler);
   app.get("/api/logout", logoutHandler);
 
-  // Password reset endpoints
-  app.post("/api/auth/forgot-password", async (req: Request, res: Response) => {
-    try {
-      const { email } = req.body;
 
-      if (!email) {
-        return res.status(400).json({ message: "Email is required" });
-      }
-
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        // Don't reveal if email exists or not for security
-        return res.json({ message: "If an account with that email exists, you will receive a password reset link." });
-      }
-
-      // Generate secure token
-      const token = randomBytes(32).toString('hex');
-      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-
-      await storage.createPasswordResetToken(user.id, token, expiresAt);
-
-      // In a real app, you would send an email here
-      // For now, we'll just log the reset link
-      const resetLink = `${req.protocol}://${req.get('host')}/reset-password?token=${token}`;
-      console.log(`[PASSWORD RESET] Reset link for ${email}: ${resetLink}`);
-
-      res.json({ 
-        message: "If an account with that email exists, you will receive a password reset link.",
-        // For development only - remove in production
-        resetLink: process.env.NODE_ENV === 'development' ? resetLink : undefined
-      });
-    } catch (error) {
-      console.error("[PASSWORD RESET] Error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post("/api/auth/reset-password", async (req: Request, res: Response) => {
-    try {
-      const { token, newPassword } = req.body;
-
-      if (!token || !newPassword) {
-        return res.status(400).json({ message: "Token and new password are required" });
-      }
-
-      if (newPassword.length < 6) {
-        return res.status(400).json({ message: "Password must be at least 6 characters long" });
-      }
-
-      const resetToken = await storage.getPasswordResetToken(token);
-      if (!resetToken) {
-        return res.status(400).json({ message: "Invalid or expired token" });
-      }
-
-      // Hash the new password
-      const hashedPassword = await hashPassword(newPassword);
-
-      // Update user password
-      await storage.updateUserPassword(resetToken.userId, hashedPassword);
-
-      // Mark token as used
-      await storage.markTokenAsUsed(resetToken.id);
-
-      // Clean up expired tokens
-      await storage.cleanupExpiredTokens();
-
-      console.log(`[PASSWORD RESET] Password reset successful for user: ${resetToken.userId}`);
-      res.json({ message: "Password reset successful" });
-    } catch (error) {
-      console.error("[PASSWORD RESET] Error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
 
   // Get current user
   app.get("/api/auth/user", async (req: Request, res: Response) => {

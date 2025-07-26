@@ -7,7 +7,7 @@ import {
   users,
   userSessions,
   userActions,
-  passwordResetTokens,
+
   type Job, 
   type Candidate, 
   type CandidateWithScore, 
@@ -25,8 +25,7 @@ import {
   type UserStats,
   type UsageStats,
   type UserUsageDetail,
-  type PasswordResetToken,
-  type InsertPasswordResetToken
+
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sql, gte, isNull } from "drizzle-orm";
@@ -40,11 +39,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserPassword(userId: string, password: string): Promise<User>;
   
-  // Password reset
-  createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<PasswordResetToken>;
-  getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined>;
-  markTokenAsUsed(tokenId: string): Promise<void>;
-  cleanupExpiredTokens(): Promise<void>;
+
   
   // User management
   getAllUsers(): Promise<User[]>;
@@ -143,45 +138,7 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  // Password reset methods
-  async createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<PasswordResetToken> {
-    const [resetToken] = await db
-      .insert(passwordResetTokens)
-      .values({
-        userId,
-        token,
-        expiresAt,
-      })
-      .returning();
-    return resetToken;
-  }
 
-  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
-    const [resetToken] = await db
-      .select()
-      .from(passwordResetTokens)
-      .where(
-        and(
-          eq(passwordResetTokens.token, token),
-          gte(passwordResetTokens.expiresAt, new Date()),
-          isNull(passwordResetTokens.usedAt)
-        )
-      );
-    return resetToken;
-  }
-
-  async markTokenAsUsed(tokenId: string): Promise<void> {
-    await db
-      .update(passwordResetTokens)
-      .set({ usedAt: new Date() })
-      .where(eq(passwordResetTokens.id, tokenId));
-  }
-
-  async cleanupExpiredTokens(): Promise<void> {
-    await db
-      .delete(passwordResetTokens)
-      .where(gte(new Date(), passwordResetTokens.expiresAt));
-  }
 
   // User management methods
   async getAllUsers(): Promise<User[]> {
@@ -373,13 +330,15 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Job description is required');
     }
 
-    const [newJob] = await db.insert(jobs).values({
+    const insertData = {
       title: jobData.title.trim(),
       description: jobData.description.trim(),
       requirements: jobData.requirements || { must: [], nice: [] },
-      status: jobData.status || 'active', // Default to active instead of draft
+      status: jobData.status || 'active',
       createdBy: jobData.createdBy
-    }).returning();
+    };
+    
+    const [newJob] = await db.insert(jobs).values(insertData).returning();
     return newJob;
   }
 
@@ -576,11 +535,7 @@ export class DatabaseStorage implements IStorage {
     
     return counts;
   }
-  async updateUserLastLogin(userId: string): Promise<void> {
-    await db.update(users)
-      .set({ lastLoginAt: new Date() })
-      .where(eq(users.id, userId));
-  }
+
 }
 
 export const storage = new DatabaseStorage();
