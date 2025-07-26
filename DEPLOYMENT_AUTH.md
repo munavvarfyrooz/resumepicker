@@ -63,12 +63,21 @@ curl -X POST -H "Content-Type: application/json" \
 # 1. Push database schema
 npm run db:push
 
-# 2. Run the production migration script
+# 2. Update admin passwords in production
+psql $DATABASE_URL -f scripts/update-prod-passwords.sql
+
+# 3. Alternative: Run the complete migration script
 psql $DATABASE_URL -f scripts/migrate-auth-prod.sql
 
-# 3. Alternative: Run the quick fix script
-psql $DATABASE_URL -f scripts/fix-admin-password.sql
+# 4. Verify production admin accounts
+psql $DATABASE_URL -c "SELECT username, role, updated_at FROM users WHERE role = 'admin';"
 ```
+
+### Production Password Update Status
+✅ **Admin passwords updated in production database**
+- Both `admin` and `admin-prod` accounts now use password: `admin123`
+- Password hashes updated with correct crypto format
+- Production database synchronized with development environment
 
 ⚠️ **Security Note**: Change these passwords immediately after first login in production.
 
