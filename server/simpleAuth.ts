@@ -282,7 +282,7 @@ export async function createAdminUser(): Promise<void> {
       return;
     }
 
-    const hashedPassword = await hashPassword("admin123");
+    const hashedPassword = await hashPassword("AdminSecure2025!$");
     await storage.createUser({
       id: "admin-simple",
       username: "admin",
