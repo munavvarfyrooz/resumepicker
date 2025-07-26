@@ -66,7 +66,7 @@ export function setupSimpleAuth(app: Express) {
   const sessionStore = new PostgresSessionStore({
     conString: process.env.DATABASE_URL,
     createTableIfMissing: false, // Disable automatic table creation
-    tableName: 'session'
+    tableName: 'sessions'
   });
 
   app.use(

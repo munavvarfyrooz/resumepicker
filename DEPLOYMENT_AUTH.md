@@ -31,6 +31,33 @@ psql $DATABASE_URL -f scripts/migrate-auth-prod.sql
 - **Role**: admin
 - **Email**: admin-prod@smarthire.com
 
+## Production Issues & Solutions
+
+### Problem: "Taking older password for admin"
+**Solution**: Run the migration script to update password hashes:
+```bash
+psql $DATABASE_URL -f scripts/migrate-auth-prod.sql
+```
+
+### Problem: "Not routing to dashboard" 
+**Solution**: Ensure:
+1. Admin users have correct role assignments
+2. Session table name is 'sessions' (not 'session')
+3. Authentication endpoints return proper JSON responses
+
+### Testing Production Authentication
+```bash
+# Test admin login
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"YP9pFOX^Tte*cB!kfhbh"}' \
+  https://yourapp.com/api/login
+
+# Test admin-prod login  
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"username":"admin-prod","password":"admin123"}' \
+  https://yourapp.com/api/login
+```
+
 ⚠️ **Security Note**: Change these passwords immediately after first login in production.
 
 ## Environment Variables Required
