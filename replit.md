@@ -164,6 +164,8 @@ The application requires the following environment variables:
 - **Password Hash Migration**: Fixed legacy password hash format compatibility for existing users (fyru, admin-prod)
 - **Production Database Migration**: Successfully migrated database schema to production-ready state with proper authentication tables
 - **Deployment Scripts**: Created migration scripts and deployment documentation for production environments
+- **Admin Password Standardization**: Updated both admin accounts to use consistent 'admin123' password for easier production deployment
+- **Session Storage Fix**: Corrected session table name from 'session' to 'sessions' for proper PostgreSQL integration
 
 ### Deployment
 The system is built to scale horizontally with stateless backend services and can be deployed on platforms like Railway, Vercel, or traditional VPS environments.

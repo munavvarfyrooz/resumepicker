@@ -12,8 +12,8 @@ DELETE FROM users WHERE username IN ('admin', 'admin-prod');
 -- These are the exact hashes that work in development
 INSERT INTO users (id, username, email, password, first_name, last_name, role, is_active, created_at, updated_at) 
 VALUES 
-  -- Main admin account: username=admin, password=YP9pFOX^Tte*cB!kfhbh
-  ('admin-001', 'admin', 'admin@smarthire.com', '7f153ff0e8358a2500fc3a233c6118fdda20c751452f654dfccc1e7f8c5d508a:d66e10f72908429703c311ed4a0b2643bd19114eb878de29a33ad88837756d14c987203d8deaf1792ae51e2046002975f964d34ff9ac3a423e9d9beb7b3d8a75', 'Admin', 'User', 'admin', true, NOW(), NOW()),
+  -- Main admin account: username=admin, password=admin123
+  ('admin-001', 'admin', 'admin@smarthire.com', '5054730a0d7365086c96be7350c3ea75df69573eb381a1cdaa418cab5299a642:60987d4376b61036ddcae7c16422323e6a16c74392714fd51a0f9b52532bdd642989d4ebccf52a5050d7260d47083c8a2baebf34e36121774d3795231475e1ac', 'Admin', 'User', 'admin', true, NOW(), NOW()),
   
   -- Production admin account: username=admin-prod, password=admin123
   ('admin-prod-001', 'admin-prod', 'admin-prod@smarthire.com', '9a579228abf0290984582cd4db64c4dee9070bc807072fd2a3e7bfb7ff3de4c2:c32ccb34c6b82a95a8b3400bc49dc6f5f61679a6add303f6112a276d20529ac646965810e2a6b51b86002436300816ed729153a6b3f0f97f81d36877f8058f82', 'Production', 'Admin', 'admin', true, NOW(), NOW())

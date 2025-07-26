@@ -21,7 +21,7 @@ psql $DATABASE_URL -f scripts/migrate-auth-prod.sql
 
 ### Main Admin Account
 - **Username**: `admin`
-- **Password**: `YP9pFOX^Tte*cB!kfhbh`
+- **Password**: `admin123`
 - **Role**: admin
 - **Email**: admin@smarthire.com
 
@@ -49,13 +49,25 @@ psql $DATABASE_URL -f scripts/migrate-auth-prod.sql
 ```bash
 # Test admin login
 curl -X POST -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"YP9pFOX^Tte*cB!kfhbh"}' \
+  -d '{"username":"admin","password":"admin123"}' \
   https://yourapp.com/api/login
 
 # Test admin-prod login  
 curl -X POST -H "Content-Type: application/json" \
   -d '{"username":"admin-prod","password":"admin123"}' \
   https://yourapp.com/api/login
+```
+
+### Production Deployment Commands
+```bash
+# 1. Push database schema
+npm run db:push
+
+# 2. Run the production migration script
+psql $DATABASE_URL -f scripts/migrate-auth-prod.sql
+
+# 3. Alternative: Run the quick fix script
+psql $DATABASE_URL -f scripts/fix-admin-password.sql
 ```
 
 ⚠️ **Security Note**: Change these passwords immediately after first login in production.
