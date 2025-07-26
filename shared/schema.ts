@@ -2,7 +2,6 @@ import { pgTable, text, serial, integer, boolean, timestamp, jsonb, real, varcha
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
-import { randomUUID } from "crypto";
 
 // Authentication tables
 export const sessions = pgTable(
@@ -223,8 +222,6 @@ export type InsertScore = z.infer<typeof insertScoreSchema>;
 export type InsertUser = typeof users.$inferInsert;
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
-
-
 export type UserSession = typeof userSessions.$inferSelect;
 export type UserAction = typeof userActions.$inferSelect;
 export type InsertUserAction = typeof userActions.$inferInsert;

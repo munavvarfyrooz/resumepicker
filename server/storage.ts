@@ -7,7 +7,6 @@ import {
   users,
   userSessions,
   userActions,
-
   type Job, 
   type Candidate, 
   type CandidateWithScore, 
@@ -24,22 +23,17 @@ import {
   type ScoreWeights,
   type UserStats,
   type UsageStats,
-  type UserUsageDetail,
-
+  type UserUsageDetail
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, count, sql, gte, isNull } from "drizzle-orm";
+import { eq, desc, and, count, sql, gte } from "drizzle-orm";
 
 export interface IStorage {
   // Authentication
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
-  updateUserPassword(userId: string, password: string): Promise<User>;
-  
-
   
   // User management
   getAllUsers(): Promise<User[]>;
@@ -100,11 +94,6 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
-  }
-
   async createUser(userData: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(userData).returning();
     return user;
@@ -128,17 +117,6 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user;
   }
-
-  async updateUserPassword(userId: string, password: string): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set({ password, updatedAt: new Date() })
-      .where(eq(users.id, userId))
-      .returning();
-    return user;
-  }
-
-
 
   // User management methods
   async getAllUsers(): Promise<User[]> {
@@ -330,15 +308,13 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Job description is required');
     }
 
-    const insertData = {
+    const [newJob] = await db.insert(jobs).values({
       title: jobData.title.trim(),
       description: jobData.description.trim(),
       requirements: jobData.requirements || { must: [], nice: [] },
-      status: jobData.status || 'active',
+      status: jobData.status || 'active', // Default to active instead of draft
       createdBy: jobData.createdBy
-    };
-    
-    const [newJob] = await db.insert(jobs).values(insertData).returning();
+    }).returning();
     return newJob;
   }
 
@@ -535,7 +511,11 @@ export class DatabaseStorage implements IStorage {
     
     return counts;
   }
-
+  async updateUserLastLogin(userId: string): Promise<void> {
+    await db.update(users)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(users.id, userId));
+  }
 }
 
 export const storage = new DatabaseStorage();

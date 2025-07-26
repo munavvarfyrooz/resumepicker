@@ -76,10 +76,9 @@ export function setupSimpleAuth(app: Express) {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: process.env.NODE_ENV === 'production', // HTTPS in production
+        secure: false, // Set to true in production with HTTPS
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: 'strict', // CSRF protection
       },
     })
   );
@@ -154,77 +153,8 @@ export function setupSimpleAuth(app: Express) {
     });
   };
   
-  // Registration endpoint
-  app.post("/api/register", async (req: Request, res: Response) => {
-    try {
-      const { username, email, password, firstName, lastName } = req.body;
-
-      if (!username || !email || !password || !firstName || !lastName) {
-        return res.status(400).json({ message: "All fields are required" });
-      }
-
-      if (password.length < 6) {
-        return res.status(400).json({ message: "Password must be at least 6 characters long" });
-      }
-
-      console.log(`[AUTH] Registration attempt for: ${username}`);
-
-      // Check if user already exists
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
-      }
-
-      const existingEmail = await storage.getUserByEmail(email);
-      if (existingEmail) {
-        return res.status(400).json({ message: "Email already exists" });
-      }
-
-      // Hash password
-      const hashedPassword = await hashPassword(password);
-
-      // Generate user ID
-      const userId = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-      // Create user
-      const newUser = await storage.createUser({
-        id: userId,
-        username,
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        role: "user",
-        isActive: true,
-      });
-
-      // Log user in immediately after registration
-      (req.session as any).userId = newUser.id;
-      (req.session as any).user = {
-        id: newUser.id,
-        username: newUser.username,
-        role: newUser.role,
-      };
-
-      console.log(`[AUTH] Registration successful for: ${username}`);
-      res.json({
-        id: newUser.id,
-        username: newUser.username,
-        email: newUser.email,
-        role: newUser.role,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-      });
-    } catch (error) {
-      console.error("[AUTH] Registration error:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
   app.post("/api/logout", logoutHandler);
   app.get("/api/logout", logoutHandler);
-
-
 
   // Get current user
   app.get("/api/auth/user", async (req: Request, res: Response) => {
@@ -283,7 +213,7 @@ export async function createAdminUser(): Promise<void> {
       return;
     }
 
-    const hashedPassword = await hashPassword("AdminSecure2025!$");
+    const hashedPassword = await hashPassword("admin123");
     await storage.createUser({
       id: "admin-simple",
       username: "admin",
