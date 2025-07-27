@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, Shield, UserPlus, LogIn } from "lucide-react";
+import { Users, Shield, UserPlus, LogIn, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -33,6 +33,7 @@ export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("login");
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -50,15 +51,12 @@ export default function AuthPage() {
       return response.json();
     },
     onSuccess: () => {
+      setLoginError(null);
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       setLocation("/");
     },
     onError: (error: Error) => {
-      toast({
-        title: "Login Failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      setLoginError(error.message);
     },
   });
 
@@ -125,8 +123,21 @@ export default function AuthPage() {
                     </span>
                   </div>
 
+                  {/* GitHub-style Error Message */}
+                  {loginError && (
+                    <div className="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
+                      <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+                      <div className="text-sm text-red-700 dark:text-red-300">
+                        <strong>Incorrect username or password.</strong>
+                      </div>
+                    </div>
+                  )}
+
                   <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))} className="space-y-4">
+                    <form onSubmit={loginForm.handleSubmit((data) => {
+                      setLoginError(null);
+                      loginMutation.mutate(data);
+                    })} className="space-y-4">
                       <FormField
                         control={loginForm.control}
                         name="username"
