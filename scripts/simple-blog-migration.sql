@@ -1,6 +1,21 @@
 -- Simple Blog Migration SQL for Production Database
 -- Copy and paste this directly into your production database SQL console
 
+-- First, ensure admin user exists (this should already be created during deployment)
+INSERT INTO users (id, username, email, password, role, first_name, last_name, created_at, updated_at, last_login_at)
+VALUES (
+  'admin-001', 
+  'admin', 
+  'admin@smarthire.com', 
+  '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', -- admin/)%yK[NRt6!)+kP<Q{dWu
+  'admin', 
+  'Admin', 
+  'User', 
+  NOW(), 
+  NOW(), 
+  NOW()
+) ON CONFLICT (id) DO NOTHING;
+
 -- Insert blog categories
 INSERT INTO blog_categories (name, slug, description, created_at) VALUES
 ('Recruitment Tips', 'recruitment-tips', 'Expert advice and best practices for successful recruitment', NOW()),

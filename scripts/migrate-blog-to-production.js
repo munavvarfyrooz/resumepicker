@@ -216,13 +216,22 @@ async function migrateBlogData() {
   try {
     console.log('🔄 Starting blog data migration to production...');
     
-    // Check if admin user exists in production
-    const adminCheck = await pool.query('SELECT id FROM users WHERE id = $1', ['admin-001']);
-    if (adminCheck.rows.length === 0) {
-      console.error('❌ Admin user not found in production database');
-      console.log('Please ensure admin user exists before migrating blog data');
-      process.exit(1);
-    }
+    // Ensure admin user exists in production
+    console.log('👤 Ensuring admin user exists...');
+    await pool.query(`
+      INSERT INTO users (id, username, email, password, role, first_name, last_name, created_at, updated_at, last_login_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), NOW())
+      ON CONFLICT (id) DO NOTHING
+    `, [
+      'admin-001', 
+      'admin', 
+      'admin@smarthire.com', 
+      '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // admin/)%yK[NRt6!)+kP<Q{dWu
+      'admin', 
+      'Admin', 
+      'User'
+    ]);
+    console.log('  ✅ Admin user ready');
     
     // Migrate categories first
     console.log('📁 Migrating blog categories...');
