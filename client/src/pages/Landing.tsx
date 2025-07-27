@@ -18,7 +18,7 @@ export default function Landing() {
           </div>
           
           <div className="flex items-center space-x-4">
-            <Link href="/beautiful-blog" className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+            <Link href="/blog" className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Blog</span>
             </Link>
@@ -54,7 +54,7 @@ export default function Landing() {
             >
               Get Started
             </Button>
-            <Link href="/beautiful-blog">
+            <Link href="/blog">
               <Button 
                 size="lg" 
                 variant="outline"

@@ -35,7 +35,7 @@ export default function BeautifulBlogPost() {
       <header className="bg-white/80 backdrop-blur-sm dark:bg-gray-900/80 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/beautiful-blog" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+            <Link href="/blog" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <BookOpen className="h-5 w-5 text-white" />
               </div>
@@ -46,7 +46,7 @@ export default function BeautifulBlogPost() {
             </Link>
             
             <div className="flex items-center space-x-4">
-              <Link href="/beautiful-blog" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+              <Link href="/blog" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                 All Articles
               </Link>
               <Link href="/" className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
@@ -84,7 +84,7 @@ export default function BeautifulBlogPost() {
           <BookOpen className="h-16 w-16 text-gray-400 mx-auto" />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Article Not Found</h1>
           <p className="text-gray-600 dark:text-gray-300">The article you're looking for doesn't exist or has been removed.</p>
-          <Link href="/beautiful-blog">
+          <Link href="/blog">
             <Button className="rounded-full">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Blog

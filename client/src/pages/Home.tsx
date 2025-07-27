@@ -94,7 +94,7 @@ export default function Home() {
           </Link>
 
           {user?.role === 'admin' && (
-            <Link href="/blog">
+            <Link href="/blog-management">
               <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
                 <CardHeader className="pb-3">
                   <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mb-3">
@@ -109,15 +109,15 @@ export default function Home() {
             </Link>
           )}
 
-          <Link href="/blog-view">
+          <Link href="/blog">
             <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
               <CardHeader className="pb-3">
                 <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mb-3">
                   <BarChart3 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
-                <CardTitle className="text-lg">Beautiful Blog</CardTitle>
+                <CardTitle className="text-lg">Blog</CardTitle>
                 <CardDescription>
-                  Experience our stunning, modern blog with featured articles and insights.
+                  Read our latest articles and insights on recruitment technology.
                 </CardDescription>
               </CardHeader>
             </Card>
