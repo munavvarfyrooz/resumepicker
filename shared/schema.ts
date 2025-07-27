@@ -137,10 +137,15 @@ export const blogPosts = pgTable("blog_posts", {
   excerpt: text("excerpt"),
   status: varchar("status", { enum: ["draft", "published", "archived"] }).notNull().default("draft"),
   featuredImage: varchar("featured_image"),
+  featuredImageAlt: varchar("featured_image_alt"),
   tags: text("tags").array(),
   metaTitle: varchar("meta_title"),
   metaDescription: text("meta_description"),
+  readingTime: integer("reading_time"), // estimated reading time in minutes
+  viewCount: integer("view_count").default(0),
+  isPinned: boolean("is_pinned").default(false),
   publishedAt: timestamp("published_at"),
+  scheduledAt: timestamp("scheduled_at"), // for scheduled publishing
   authorId: varchar("author_id").references(() => users.id).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -158,6 +163,21 @@ export const blogPostCategories = pgTable("blog_post_categories", {
   id: serial("id").primaryKey(),
   postId: integer("post_id").references(() => blogPosts.id).notNull(),
   categoryId: integer("category_id").references(() => blogCategories.id).notNull(),
+});
+
+// Media library for blog images and assets
+export const mediaAssets = pgTable("media_assets", {
+  id: serial("id").primaryKey(),
+  filename: varchar("filename").notNull(),
+  originalFilename: varchar("original_filename").notNull(),
+  filePath: varchar("file_path").notNull(),
+  fileSize: integer("file_size").notNull(),
+  mimeType: varchar("mime_type").notNull(),
+  width: integer("width"),
+  height: integer("height"),
+  altText: text("alt_text"),
+  uploadedBy: varchar("uploaded_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // Relations
