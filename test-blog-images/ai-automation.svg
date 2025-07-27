@@ -1,0 +1,102 @@
+<svg width="600" height="300" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="techGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06b6d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="600" height="300" fill="#f8fafc"/>
+  
+  <!-- Main Robot/AI Figure -->
+  <g transform="translate(250, 50)">
+    <!-- Robot head -->
+    <rect x="0" y="0" width="100" height="80" rx="15" fill="url(#techGradient)"/>
+    <!-- Eyes -->
+    <circle cx="25" cy="30" r="8" fill="#ffffff"/>
+    <circle cx="75" cy="30" r="8" fill="#ffffff"/>
+    <circle cx="25" cy="30" r="4" fill="#1e293b"/>
+    <circle cx="75" cy="30" r="4" fill="#1e293b"/>
+    <!-- Mouth -->
+    <rect x="35" y="50" width="30" height="4" rx="2" fill="#ffffff"/>
+    
+    <!-- Robot body -->
+    <rect x="10" y="80" width="80" height="120" rx="10" fill="#e2e8f0"/>
+    <rect x="20" y="100" width="60" height="80" rx="5" fill="url(#techGradient)" opacity="0.3"/>
+    
+    <!-- Arms -->
+    <rect x="-15" y="100" width="20" height="60" rx="10" fill="#94a3b8"/>
+    <rect x="95" y="100" width="20" height="60" rx="10" fill="#94a3b8"/>
+    <!-- Hands -->
+    <circle cx="-5" cy="170" r="12" fill="#64748b"/>
+    <circle cx="105" cy="170" r="12" fill="#64748b"/>
+  </g>
+  
+  <!-- Data Flow Elements -->
+  <g transform="translate(50, 100)">
+    <!-- CV Documents -->
+    <rect x="0" y="0" width="40" height="50" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <line x1="8" y1="15" x2="32" y2="15" stroke="#64748b" stroke-width="2"/>
+    <line x1="8" y1="25" x2="28" y2="25" stroke="#64748b" stroke-width="1"/>
+    <line x1="8" y1="35" x2="30" y2="35" stroke="#64748b" stroke-width="1"/>
+    
+    <rect x="0" y="60" width="40" height="50" rx="5" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    <line x1="8" y1="75" x2="32" y2="75" stroke="#64748b" stroke-width="2"/>
+    <line x1="8" y1="85" x2="28" y2="85" stroke="#64748b" stroke-width="1"/>
+    <line x1="8" y1="95" x2="30" y2="95" stroke="#64748b" stroke-width="1"/>
+    
+    <!-- Flow arrows -->
+    <path d="M50 25 Q100 25 150 50" stroke="#3b82f6" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+    <path d="M50 85 Q100 85 150 75" stroke="#3b82f6" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+    
+    <text x="20" y="140" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#64748b">Input CVs</text>
+  </g>
+  
+  <!-- Output Results -->
+  <g transform="translate(450, 80)">
+    <!-- Ranked Results -->
+    <rect x="0" y="0" width="120" height="140" rx="8" fill="#ffffff" stroke="#e2e8f0" stroke-width="2"/>
+    
+    <!-- Top candidate -->
+    <rect x="10" y="10" width="100" height="30" rx="5" fill="#10b981" opacity="0.1" stroke="#10b981" stroke-width="1"/>
+    <circle cx="25" cy="25" r="8" fill="#10b981"/>
+    <text x="40" y="20" font-family="Arial, sans-serif" font-size="10" fill="#1e293b">Sarah Chen</text>
+    <text x="40" y="32" font-family="Arial, sans-serif" font-size="8" fill="#64748b">95% Match</text>
+    
+    <!-- Second candidate -->
+    <rect x="10" y="50" width="100" height="30" rx="5" fill="#f59e0b" opacity="0.1" stroke="#f59e0b" stroke-width="1"/>
+    <circle cx="25" cy="65" r="8" fill="#f59e0b"/>
+    <text x="40" y="60" font-family="Arial, sans-serif" font-size="10" fill="#1e293b">Mike Johnson</text>
+    <text x="40" y="72" font-family="Arial, sans-serif" font-size="8" fill="#64748b">87% Match</text>
+    
+    <!-- Third candidate -->
+    <rect x="10" y="90" width="100" height="30" rx="5" fill="#6366f1" opacity="0.1" stroke="#6366f1" stroke-width="1"/>
+    <circle cx="25" cy="105" r="8" fill="#6366f1"/>
+    <text x="40" y="100" font-family="Arial, sans-serif" font-size="10" fill="#1e293b">Alex Rodriguez</text>
+    <text x="40" y="112" font-family="Arial, sans-serif" font-size="8" fill="#64748b">82% Match</text>
+    
+    <text x="60" y="155" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#64748b">Ranked Results</text>
+  </g>
+  
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6"/>
+    </marker>
+  </defs>
+  
+  <!-- Output arrow -->
+  <path d="M400 125 Q425 125 450 105" stroke="#10b981" stroke-width="3" fill="none" marker-end="url(#greenArrow)"/>
+  
+  <defs>
+    <marker id="greenArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#10b981"/>
+    </marker>
+  </defs>
+  
+  <!-- Title -->
+  <text x="300" y="30" font-family="Arial, sans-serif" font-size="20" font-weight="bold" text-anchor="middle" fill="#1e293b">
+    AI-Powered Automation Pipeline
+  </text>
+</svg>
