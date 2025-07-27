@@ -12,7 +12,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { insertBlogPostSchema, insertBlogCategorySchema, type BlogPostWithCategories, type BlogCategory, type InsertBlogPost, type InsertBlogCategory } from "@shared/schema";
-import { Plus, Edit, Trash2, Eye, Calendar, User, Tag } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, Calendar, User, Tag, Pin, Clock } from "lucide-react";
+import { ImageUpload } from "@/components/ui/image-upload";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { trackEvent } from "@/lib/analytics";
 
@@ -22,6 +24,8 @@ export default function BlogManagement() {
   const [editingPost, setEditingPost] = useState<BlogPostWithCategories | null>(null);
   const [showPostDialog, setShowPostDialog] = useState(false);
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
+  const [featuredImage, setFeaturedImage] = useState<string>('');
+  const [featuredImageAlt, setFeaturedImageAlt] = useState<string>('');
 
   const { data: posts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['/api/blog/posts', selectedStatus === 'all' ? undefined : selectedStatus],
@@ -46,6 +50,12 @@ export default function BlogManagement() {
       content: '',
       excerpt: '',
       status: 'draft',
+      featuredImage: '',
+      featuredImageAlt: '',
+      metaTitle: '',
+      metaDescription: '',
+      readingTime: 0,
+      isPinned: false,
       tags: [],
       categoryIds: []
     }
@@ -160,15 +170,39 @@ export default function BlogManagement() {
       content: post.content,
       excerpt: post.excerpt || '',
       status: post.status,
+      featuredImage: post.featuredImage || '',
+      featuredImageAlt: post.featuredImageAlt || '',
+      metaTitle: post.metaTitle || '',
+      metaDescription: post.metaDescription || '',
+      readingTime: post.readingTime || 0,
+      isPinned: post.isPinned || false,
       tags: post.tags || [],
       categoryIds: post.categories.map(c => c.id)
     });
+    setFeaturedImage(post.featuredImage || '');
+    setFeaturedImageAlt(post.featuredImageAlt || '');
     setShowPostDialog(true);
   };
 
   const handleNewPost = () => {
     setEditingPost(null);
-    postForm.reset();
+    postForm.reset({
+      title: '',
+      slug: '',
+      content: '',
+      excerpt: '',
+      status: 'draft',
+      featuredImage: '',
+      featuredImageAlt: '',
+      metaTitle: '',
+      metaDescription: '',
+      readingTime: 0,
+      isPinned: false,
+      tags: [],
+      categoryIds: []
+    });
+    setFeaturedImage('');
+    setFeaturedImageAlt('');
     setShowPostDialog(true);
   };
 
@@ -359,6 +393,18 @@ export default function BlogManagement() {
                 )}
               />
 
+              {/* Featured Image Upload */}
+              <ImageUpload
+                onImageSelect={(imageUrl, altText) => {
+                  postForm.setValue('featuredImage', imageUrl);
+                  postForm.setValue('featuredImageAlt', altText);
+                  setFeaturedImage(imageUrl);
+                  setFeaturedImageAlt(altText);
+                }}
+                currentImage={featuredImage || postForm.watch('featuredImage')}
+                currentAlt={featuredImageAlt || postForm.watch('featuredImageAlt')}
+              />
+
               <FormField
                 control={postForm.control}
                 name="content"
@@ -372,6 +418,91 @@ export default function BlogManagement() {
                   </FormItem>
                 )}
               />
+
+              {/* SEO Fields */}
+              <div className="space-y-4 border-t pt-4">
+                <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">SEO & Metadata</h4>
+                
+                <FormField
+                  control={postForm.control}
+                  name="metaTitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Meta Title</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ''} placeholder="SEO title (recommended: 50-60 characters)" data-testid="input-meta-title" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={postForm.control}
+                  name="metaDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Meta Description</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} value={field.value || ''} placeholder="SEO description (recommended: 120-160 characters)" rows={2} data-testid="input-meta-description" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={postForm.control}
+                  name="readingTime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Reading Time (minutes)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          min="0" 
+                          value={field.value || ''} 
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                          placeholder="Estimated reading time" 
+                          data-testid="input-reading-time" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Advanced Options */}
+              <div className="space-y-4 border-t pt-4">
+                <h4 className="font-medium text-sm text-gray-700 dark:text-gray-300">Advanced Options</h4>
+                
+                <FormField
+                  control={postForm.control}
+                  name="isPinned"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          data-testid="checkbox-pin-post"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="flex items-center gap-2">
+                          <Pin className="h-4 w-4" />
+                          Pin as Featured Post
+                        </FormLabel>
+                        <p className="text-sm text-muted-foreground">
+                          Pinned posts appear prominently on the blog homepage
+                        </p>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={postForm.control}

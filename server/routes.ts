@@ -10,6 +10,7 @@ import { ScoringEngine } from "./services/scoring";
 import { FileStorage } from "./utils/fileStorage";
 import { JobAnalysisService } from "./services/jobAnalysis";
 import { setupSimpleAuth, requireAuth, requireAdmin, createAdminUser } from "./simpleAuth";
+import { setupMediaRoutes } from "./mediaRoutes";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -103,7 +104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Jobs endpoints (protected)
   app.get('/api/jobs', requireAuth, async (req: any, res) => {
     try {
-      const jobs = await storage.getJobs(req.userId);
+      const jobs = await storage.getJobs(req.user?.id);
       res.json(jobs);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch jobs' });
@@ -112,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/jobs/candidate-counts', requireAuth, async (req: any, res) => {
     try {
-      const counts = await storage.getCandidateCountsByJob(req.userId);
+      const counts = await storage.getCandidateCountsByJob(req.user?.id);
       res.json(counts);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch candidate counts' });
@@ -121,7 +122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/jobs/:id', requireAuth, async (req: any, res) => {
     try {
-      const job = await storage.getJob(parseInt(req.params.id), req.userId);
+      const job = await storage.getJob(parseInt(req.params.id), req.user?.id);
       if (!job) {
         return res.status(404).json({ error: 'Job not found' });
       }
@@ -136,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertJobSchema.parse(req.body);
       const job = await storage.createJob({
         ...validatedData,
-        createdBy: req.userId,
+        createdBy: req.user?.id,
       });
       
       // Log user action
@@ -214,7 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Candidates endpoints
   app.get('/api/candidates', requireAuth, async (req: any, res) => {
     try {
-      const candidates = await storage.getCandidates(req.userId);
+      const candidates = await storage.getCandidates(req.user?.id);
       res.json(candidates);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch candidates' });
@@ -223,7 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/candidates/:id', requireAuth, async (req: any, res) => {
     try {
-      const candidate = await storage.getCandidate(parseInt(req.params.id), req.userId);
+      const candidate = await storage.getCandidate(parseInt(req.params.id), req.user?.id);
       if (!candidate) {
         return res.status(404).json({ error: 'Candidate not found' });
       }
@@ -323,7 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const candidate = await storage.createCandidate({
             ...candidateData,
-            createdBy: req.userId, // Add user association
+            createdBy: req.user?.id, // Add user association
           });
 
           // Save skills
@@ -354,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/jobs/:jobId/candidates', requireAuth, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.jobId);
-      const candidates = await storage.getCandidatesWithScores(jobId, req.userId);
+      const candidates = await storage.getCandidatesWithScores(jobId, req.user?.id);
       res.json(candidates);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch candidates with scores' });
@@ -593,7 +594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const postData = insertBlogPostSchema.parse(req.body);
       const post = await storage.createBlogPost({
         ...postData,
-        authorId: req.userId
+        authorId: req.user?.id
       });
       
       // Set categories if provided
@@ -603,7 +604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log the action
       await storage.logUserAction({
-        userId: req.userId,
+        userId: req.user?.id,
         action: 'create_blog_post',
         resourceType: 'blog_post',
         resourceId: post.id,
@@ -633,7 +634,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log the action
       await storage.logUserAction({
-        userId: req.userId,
+        userId: req.user?.id,
         action: 'update_blog_post',
         resourceType: 'blog_post',
         resourceId: id,
@@ -657,7 +658,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log the action
       await storage.logUserAction({
-        userId: req.userId,
+        userId: req.user?.id,
         action: 'publish_blog_post',
         resourceType: 'blog_post',
         resourceId: id,
@@ -678,7 +679,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log the action
       await storage.logUserAction({
-        userId: req.userId,
+        userId: req.user?.id,
         action: 'delete_blog_post',
         resourceType: 'blog_post',
         resourceId: id
@@ -741,6 +742,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to delete blog category' });
     }
   });
+
+  // Set up media routes for image uploads
+  setupMediaRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;

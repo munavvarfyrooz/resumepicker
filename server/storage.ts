@@ -58,6 +58,12 @@ export interface IStorage {
   // Activity tracking
   logUserAction(action: InsertUserAction): Promise<UserAction>;
   
+  // Media operations
+  createMediaAsset(insertAsset: InsertMediaAsset): Promise<MediaAsset>;
+  getMediaAssets(): Promise<MediaAsset[]>;
+  getMediaAsset(id: number): Promise<MediaAsset | undefined>;
+  deleteMediaAsset(id: number): Promise<void>;
+
   // Analytics
   getUserStats(): Promise<UserStats>;
   getUsageStats(): Promise<UsageStats>;
@@ -763,6 +769,25 @@ export class DatabaseStorage implements IStorage {
         categoryIds.map(categoryId => ({ postId, categoryId }))
       );
     }
+  }
+
+  // Media operations implementation
+  async createMediaAsset(insertAsset: InsertMediaAsset): Promise<MediaAsset> {
+    const [asset] = await db.insert(mediaAssets).values(insertAsset).returning();
+    return asset;
+  }
+
+  async getMediaAssets(): Promise<MediaAsset[]> {
+    return await db.select().from(mediaAssets).orderBy(desc(mediaAssets.createdAt));
+  }
+
+  async getMediaAsset(id: number): Promise<MediaAsset | undefined> {
+    const [asset] = await db.select().from(mediaAssets).where(eq(mediaAssets.id, id));
+    return asset;
+  }
+
+  async deleteMediaAsset(id: number): Promise<void> {
+    await db.delete(mediaAssets).where(eq(mediaAssets.id, id));
   }
 }
 
