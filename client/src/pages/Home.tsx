@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, BarChart3, Upload, Settings, LogOut, Edit } from "lucide-react";
+import { Users, BarChart3, Upload, Settings, LogOut, Edit, FileText } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 export default function Home() {
@@ -102,6 +102,20 @@ export default function Home() {
                 <CardTitle className="text-lg">Blog Management</CardTitle>
                 <CardDescription>
                   Create and manage blog posts for your recruitment platform.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          <Link href="/blog-view">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
+              <CardHeader className="pb-3">
+                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mb-3">
+                  <BarChart3 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <CardTitle className="text-lg">View Blog</CardTitle>
+                <CardDescription>
+                  Browse and read published blog posts and articles.
                 </CardDescription>
               </CardHeader>
             </Card>

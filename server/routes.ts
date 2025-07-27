@@ -657,7 +657,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log the action
       await storage.logUserAction({
-        userId: req.user.id,
+        userId: req.userId,
         action: 'publish_blog_post',
         resourceType: 'blog_post',
         resourceId: id,
@@ -678,7 +678,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log the action
       await storage.logUserAction({
-        userId: req.user.id,
+        userId: req.userId,
         action: 'delete_blog_post',
         resourceType: 'blog_post',
         resourceId: id
