@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
@@ -324,7 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const candidate = await storage.createCandidate({
             ...candidateData,
-            createdBy: req.user?.id, // Add user association
+            createdBy: req.user?.id as string, // Add user association
           });
 
           // Save skills
@@ -745,6 +745,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Set up media routes for image uploads
   setupMediaRoutes(app);
+
+  // Serve static files
+  app.use('/uploads', express.static(path.join(import.meta.dirname, '..', 'uploads')));
+  app.use('/test-blog-images', express.static(path.join(import.meta.dirname, '..', 'test-blog-images')));
 
   const httpServer = createServer(app);
   return httpServer;
