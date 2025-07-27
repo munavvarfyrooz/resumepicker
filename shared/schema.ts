@@ -128,11 +128,44 @@ export const scores = pgTable("scores", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Blog management tables
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  slug: varchar("slug").unique().notNull(),
+  content: text("content").notNull(),
+  excerpt: text("excerpt"),
+  status: varchar("status", { enum: ["draft", "published", "archived"] }).notNull().default("draft"),
+  featuredImage: varchar("featured_image"),
+  tags: text("tags").array(),
+  metaTitle: varchar("meta_title"),
+  metaDescription: text("meta_description"),
+  publishedAt: timestamp("published_at"),
+  authorId: varchar("author_id").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const blogCategories = pgTable("blog_categories", {
+  id: serial("id").primaryKey(),
+  name: varchar("name").unique().notNull(),
+  slug: varchar("slug").unique().notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const blogPostCategories = pgTable("blog_post_categories", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").references(() => blogPosts.id).notNull(),
+  categoryId: integer("category_id").references(() => blogCategories.id).notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   jobs: many(jobs),
   sessions: many(userSessions),
   actions: many(userActions),
+  blogPosts: many(blogPosts),
 }));
 
 export const jobsRelations = relations(jobs, ({ many, one }) => ({
@@ -188,6 +221,29 @@ export const scoresRelations = relations(scores, ({ one }) => ({
   }),
 }));
 
+export const blogPostsRelations = relations(blogPosts, ({ one, many }) => ({
+  author: one(users, {
+    fields: [blogPosts.authorId],
+    references: [users.id],
+  }),
+  categories: many(blogPostCategories),
+}));
+
+export const blogCategoriesRelations = relations(blogCategories, ({ many }) => ({
+  posts: many(blogPostCategories),
+}));
+
+export const blogPostCategoriesRelations = relations(blogPostCategories, ({ one }) => ({
+  post: one(blogPosts, {
+    fields: [blogPostCategories.postId],
+    references: [blogPosts.id],
+  }),
+  category: one(blogCategories, {
+    fields: [blogPostCategories.categoryId],
+    references: [blogCategories.id],
+  }),
+}));
+
 // Insert schemas
 export const insertJobSchema = createInsertSchema(jobs).omit({
   id: true,
@@ -208,6 +264,25 @@ export const insertScoreSchema = createInsertSchema(scores).omit({
   createdAt: true,
 });
 
+export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  authorId: true,
+}).extend({
+  title: z.string().min(1, "Title is required").trim(),
+  content: z.string().min(1, "Content is required").trim(),
+  slug: z.string().min(1, "Slug is required").regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
+});
+
+export const insertBlogCategorySchema = createInsertSchema(blogCategories).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  name: z.string().min(1, "Category name is required").trim(),
+  slug: z.string().min(1, "Slug is required").regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
+});
+
 // Types
 export type Job = typeof jobs.$inferSelect;
 export type InsertJob = z.infer<typeof insertJobSchema>;
@@ -225,6 +300,18 @@ export type User = typeof users.$inferSelect;
 export type UserSession = typeof userSessions.$inferSelect;
 export type UserAction = typeof userActions.$inferSelect;
 export type InsertUserAction = typeof userActions.$inferInsert;
+
+// Blog types
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+export type BlogCategory = typeof blogCategories.$inferSelect;
+export type InsertBlogCategory = z.infer<typeof insertBlogCategorySchema>;
+export type BlogPostCategory = typeof blogPostCategories.$inferSelect;
+
+export interface BlogPostWithCategories extends BlogPost {
+  categories: BlogCategory[];
+  author: User;
+}
 
 export interface ScoreWeights {
   skills: number;

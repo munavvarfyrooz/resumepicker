@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, BarChart3, Upload, Settings, LogOut } from "lucide-react";
+import { Users, BarChart3, Upload, Settings, LogOut, Edit } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 export default function Home() {
@@ -88,6 +88,20 @@ export default function Home() {
                 <CardTitle className="text-lg">Open Dashboard</CardTitle>
                 <CardDescription>
                   Access your complete recruitment workspace with jobs, candidates, and AI-powered matching.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+
+          <Link href="/blog">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
+              <CardHeader className="pb-3">
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mb-3">
+                  <Edit className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+                <CardTitle className="text-lg">Blog Management</CardTitle>
+                <CardDescription>
+                  Create and manage blog posts for your recruitment platform.
                 </CardDescription>
               </CardHeader>
             </Card>

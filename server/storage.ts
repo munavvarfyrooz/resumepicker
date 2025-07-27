@@ -7,6 +7,9 @@ import {
   users,
   userSessions,
   userActions,
+  blogPosts,
+  blogCategories,
+  blogPostCategories,
   type Job, 
   type Candidate, 
   type CandidateWithScore, 
@@ -23,7 +26,12 @@ import {
   type ScoreWeights,
   type UserStats,
   type UsageStats,
-  type UserUsageDetail
+  type UserUsageDetail,
+  type BlogPost,
+  type InsertBlogPost,
+  type BlogCategory,
+  type InsertBlogCategory,
+  type BlogPostWithCategories
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sql, gte } from "drizzle-orm";
@@ -77,6 +85,24 @@ export interface IStorage {
   getScore(candidateId: number, jobId: number): Promise<Score | undefined>;
   saveScore(score: InsertScore): Promise<Score>;
   updateScoreWeights(jobId: number, weights: ScoreWeights): Promise<void>;
+  
+  // Blog management
+  getBlogPosts(status?: 'draft' | 'published' | 'archived'): Promise<BlogPostWithCategories[]>;
+  getBlogPost(id: number): Promise<BlogPostWithCategories | undefined>;
+  getBlogPostBySlug(slug: string): Promise<BlogPostWithCategories | undefined>;
+  createBlogPost(post: InsertBlogPost & { authorId: string }): Promise<BlogPost>;
+  updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost>;
+  deleteBlogPost(id: number): Promise<void>;
+  publishBlogPost(id: number): Promise<BlogPost>;
+  
+  // Blog categories
+  getBlogCategories(): Promise<BlogCategory[]>;
+  createBlogCategory(category: InsertBlogCategory): Promise<BlogCategory>;
+  updateBlogCategory(id: number, category: Partial<InsertBlogCategory>): Promise<BlogCategory>;
+  deleteBlogCategory(id: number): Promise<void>;
+  
+  // Blog post categories
+  setBlogPostCategories(postId: number, categoryIds: number[]): Promise<void>;
   
   // Utility methods
   getCandidateCountsByJob(): Promise<Record<number, number>>;
@@ -313,7 +339,8 @@ export class DatabaseStorage implements IStorage {
       description: jobData.description.trim(),
       requirements: jobData.requirements || { must: [], nice: [] },
       status: jobData.status || 'active', // Default to active instead of draft
-      createdBy: jobData.createdBy
+      createdBy: jobData.createdBy,
+      createdAt: new Date()
     }).returning();
     return newJob;
   }
@@ -511,10 +538,229 @@ export class DatabaseStorage implements IStorage {
     
     return counts;
   }
-  async updateUserLastLogin(userId: string): Promise<void> {
-    await db.update(users)
-      .set({ lastLoginAt: new Date() })
-      .where(eq(users.id, userId));
+
+  // Blog management methods
+  async getBlogPosts(status?: 'draft' | 'published' | 'archived'): Promise<BlogPostWithCategories[]> {
+    const query = db.select({
+      id: blogPosts.id,
+      title: blogPosts.title,
+      slug: blogPosts.slug,
+      content: blogPosts.content,
+      excerpt: blogPosts.excerpt,
+      status: blogPosts.status,
+      featuredImage: blogPosts.featuredImage,
+      tags: blogPosts.tags,
+      metaTitle: blogPosts.metaTitle,
+      metaDescription: blogPosts.metaDescription,
+      publishedAt: blogPosts.publishedAt,
+      authorId: blogPosts.authorId,
+      createdAt: blogPosts.createdAt,
+      updatedAt: blogPosts.updatedAt,
+      author: {
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role
+      }
+    }).from(blogPosts)
+    .leftJoin(users, eq(blogPosts.authorId, users.id))
+    .where(status ? eq(blogPosts.status, status) : undefined)
+    .orderBy(desc(blogPosts.createdAt));
+
+    const posts = await query;
+    
+    const postsWithCategories: BlogPostWithCategories[] = [];
+    
+    for (const post of posts) {
+      const categories = await db.select({
+        id: blogCategories.id,
+        name: blogCategories.name,
+        slug: blogCategories.slug,
+        description: blogCategories.description,
+        createdAt: blogCategories.createdAt
+      })
+      .from(blogCategories)
+      .innerJoin(blogPostCategories, eq(blogCategories.id, blogPostCategories.categoryId))
+      .where(eq(blogPostCategories.postId, post.id));
+
+      postsWithCategories.push({
+        ...post,
+        author: post.author as User,
+        categories
+      });
+    }
+
+    return postsWithCategories;
+  }
+
+  async getBlogPost(id: number): Promise<BlogPostWithCategories | undefined> {
+    const [post] = await db.select({
+      id: blogPosts.id,
+      title: blogPosts.title,
+      slug: blogPosts.slug,
+      content: blogPosts.content,
+      excerpt: blogPosts.excerpt,
+      status: blogPosts.status,
+      featuredImage: blogPosts.featuredImage,
+      tags: blogPosts.tags,
+      metaTitle: blogPosts.metaTitle,
+      metaDescription: blogPosts.metaDescription,
+      publishedAt: blogPosts.publishedAt,
+      authorId: blogPosts.authorId,
+      createdAt: blogPosts.createdAt,
+      updatedAt: blogPosts.updatedAt,
+      author: {
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role
+      }
+    }).from(blogPosts)
+    .leftJoin(users, eq(blogPosts.authorId, users.id))
+    .where(eq(blogPosts.id, id));
+
+    if (!post) return undefined;
+
+    const categories = await db.select({
+      id: blogCategories.id,
+      name: blogCategories.name,
+      slug: blogCategories.slug,
+      description: blogCategories.description,
+      createdAt: blogCategories.createdAt
+    })
+    .from(blogCategories)
+    .innerJoin(blogPostCategories, eq(blogCategories.id, blogPostCategories.categoryId))
+    .where(eq(blogPostCategories.postId, post.id));
+
+    return {
+      ...post,
+      author: post.author as User,
+      categories
+    };
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<BlogPostWithCategories | undefined> {
+    const [post] = await db.select({
+      id: blogPosts.id,
+      title: blogPosts.title,
+      slug: blogPosts.slug,
+      content: blogPosts.content,
+      excerpt: blogPosts.excerpt,
+      status: blogPosts.status,
+      featuredImage: blogPosts.featuredImage,
+      tags: blogPosts.tags,
+      metaTitle: blogPosts.metaTitle,
+      metaDescription: blogPosts.metaDescription,
+      publishedAt: blogPosts.publishedAt,
+      authorId: blogPosts.authorId,
+      createdAt: blogPosts.createdAt,
+      updatedAt: blogPosts.updatedAt,
+      author: {
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role
+      }
+    }).from(blogPosts)
+    .leftJoin(users, eq(blogPosts.authorId, users.id))
+    .where(eq(blogPosts.slug, slug));
+
+    if (!post) return undefined;
+
+    const categories = await db.select({
+      id: blogCategories.id,
+      name: blogCategories.name,
+      slug: blogCategories.slug,
+      description: blogCategories.description,
+      createdAt: blogCategories.createdAt
+    })
+    .from(blogCategories)
+    .innerJoin(blogPostCategories, eq(blogCategories.id, blogPostCategories.categoryId))
+    .where(eq(blogPostCategories.postId, post.id));
+
+    return {
+      ...post,
+      author: post.author as User,
+      categories
+    };
+  }
+
+  async createBlogPost(postData: InsertBlogPost & { authorId: string }): Promise<BlogPost> {
+    const [post] = await db.insert(blogPosts).values({
+      ...postData,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }).returning();
+    return post;
+  }
+
+  async updateBlogPost(id: number, postData: Partial<InsertBlogPost>): Promise<BlogPost> {
+    const [post] = await db.update(blogPosts)
+      .set({
+        ...postData,
+        updatedAt: new Date()
+      })
+      .where(eq(blogPosts.id, id))
+      .returning();
+    return post;
+  }
+
+  async deleteBlogPost(id: number): Promise<void> {
+    await db.delete(blogPostCategories).where(eq(blogPostCategories.postId, id));
+    await db.delete(blogPosts).where(eq(blogPosts.id, id));
+  }
+
+  async publishBlogPost(id: number): Promise<BlogPost> {
+    const [post] = await db.update(blogPosts)
+      .set({
+        status: 'published',
+        publishedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(blogPosts.id, id))
+      .returning();
+    return post;
+  }
+
+  async getBlogCategories(): Promise<BlogCategory[]> {
+    return await db.select().from(blogCategories).orderBy(blogCategories.name);
+  }
+
+  async createBlogCategory(categoryData: InsertBlogCategory): Promise<BlogCategory> {
+    const [category] = await db.insert(blogCategories).values({
+      ...categoryData,
+      createdAt: new Date()
+    }).returning();
+    return category;
+  }
+
+  async updateBlogCategory(id: number, categoryData: Partial<InsertBlogCategory>): Promise<BlogCategory> {
+    const [category] = await db.update(blogCategories)
+      .set(categoryData)
+      .where(eq(blogCategories.id, id))
+      .returning();
+    return category;
+  }
+
+  async deleteBlogCategory(id: number): Promise<void> {
+    await db.delete(blogPostCategories).where(eq(blogPostCategories.categoryId, id));
+    await db.delete(blogCategories).where(eq(blogCategories.id, id));
+  }
+
+  async setBlogPostCategories(postId: number, categoryIds: number[]): Promise<void> {
+    await db.delete(blogPostCategories).where(eq(blogPostCategories.postId, postId));
+    
+    if (categoryIds.length > 0) {
+      await db.insert(blogPostCategories).values(
+        categoryIds.map(categoryId => ({ postId, categoryId }))
+      );
+    }
   }
 }
 

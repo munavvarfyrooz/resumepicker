@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import multer from "multer";
-import { insertJobSchema, insertCandidateSchema, type ScoreWeights } from "@shared/schema";
+import { insertJobSchema, insertCandidateSchema, insertBlogPostSchema, insertBlogCategorySchema, type ScoreWeights } from "@shared/schema";
 import path from "path";
 import { readFile } from "fs/promises";
 import { CVParser } from "./services/parsing";
@@ -141,7 +141,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log user action
       await storage.logUserAction({
-        userId: req.userId,
+        userId: req.user.id,
         action: 'create_job',
         resourceType: 'job',
         resourceId: job.id,
@@ -545,6 +545,200 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('AI ranking error:', error);
       res.status(500).json({ error: 'Failed to generate AI rankings' });
+    }
+  });
+
+  // Blog management routes
+  app.get('/api/blog/posts', async (req, res) => {
+    try {
+      const status = req.query.status as 'draft' | 'published' | 'archived' | undefined;
+      const posts = await storage.getBlogPosts(status);
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching blog posts:", error);
+      res.status(500).json({ error: 'Failed to fetch blog posts' });
+    }
+  });
+
+  app.get('/api/blog/posts/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.getBlogPost(id);
+      if (!post) {
+        return res.status(404).json({ error: 'Blog post not found' });
+      }
+      res.json(post);
+    } catch (error) {
+      console.error("Error fetching blog post:", error);
+      res.status(500).json({ error: 'Failed to fetch blog post' });
+    }
+  });
+
+  app.get('/api/blog/posts/slug/:slug', async (req, res) => {
+    try {
+      const slug = req.params.slug;
+      const post = await storage.getBlogPostBySlug(slug);
+      if (!post) {
+        return res.status(404).json({ error: 'Blog post not found' });
+      }
+      res.json(post);
+    } catch (error) {
+      console.error("Error fetching blog post by slug:", error);
+      res.status(500).json({ error: 'Failed to fetch blog post' });
+    }
+  });
+
+  app.post('/api/blog/posts', requireAuth, async (req: any, res) => {
+    try {
+      const postData = insertBlogPostSchema.parse(req.body);
+      const post = await storage.createBlogPost({
+        ...postData,
+        authorId: req.user.id
+      });
+      
+      // Set categories if provided
+      if (req.body.categoryIds && Array.isArray(req.body.categoryIds)) {
+        await storage.setBlogPostCategories(post.id, req.body.categoryIds);
+      }
+      
+      // Log the action
+      await storage.logUserAction({
+        userId: req.user.id,
+        action: 'create_blog_post',
+        resourceType: 'blog_post',
+        resourceId: post.id,
+        metadata: { title: post.title }
+      });
+      
+      res.status(201).json(post);
+    } catch (error: any) {
+      console.error("Error creating blog post:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Invalid blog post data', details: error.errors });
+      }
+      res.status(500).json({ error: 'Failed to create blog post' });
+    }
+  });
+
+  app.put('/api/blog/posts/:id', requireAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const postData = insertBlogPostSchema.partial().parse(req.body);
+      const post = await storage.updateBlogPost(id, postData);
+      
+      // Update categories if provided
+      if (req.body.categoryIds && Array.isArray(req.body.categoryIds)) {
+        await storage.setBlogPostCategories(id, req.body.categoryIds);
+      }
+      
+      // Log the action
+      await storage.logUserAction({
+        userId: req.user.id,
+        action: 'update_blog_post',
+        resourceType: 'blog_post',
+        resourceId: id,
+        metadata: { title: post.title }
+      });
+      
+      res.json(post);
+    } catch (error: any) {
+      console.error("Error updating blog post:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Invalid blog post data', details: error.errors });
+      }
+      res.status(500).json({ error: 'Failed to update blog post' });
+    }
+  });
+
+  app.post('/api/blog/posts/:id/publish', requireAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const post = await storage.publishBlogPost(id);
+      
+      // Log the action
+      await storage.logUserAction({
+        userId: req.user.id,
+        action: 'publish_blog_post',
+        resourceType: 'blog_post',
+        resourceId: id,
+        metadata: { title: post.title }
+      });
+      
+      res.json(post);
+    } catch (error) {
+      console.error("Error publishing blog post:", error);
+      res.status(500).json({ error: 'Failed to publish blog post' });
+    }
+  });
+
+  app.delete('/api/blog/posts/:id', requireAuth, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteBlogPost(id);
+      
+      // Log the action
+      await storage.logUserAction({
+        userId: req.user.id,
+        action: 'delete_blog_post',
+        resourceType: 'blog_post',
+        resourceId: id
+      });
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting blog post:", error);
+      res.status(500).json({ error: 'Failed to delete blog post' });
+    }
+  });
+
+  // Blog categories routes
+  app.get('/api/blog/categories', async (req, res) => {
+    try {
+      const categories = await storage.getBlogCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Error fetching blog categories:", error);
+      res.status(500).json({ error: 'Failed to fetch blog categories' });
+    }
+  });
+
+  app.post('/api/blog/categories', requireAdmin, async (req: any, res) => {
+    try {
+      const categoryData = insertBlogCategorySchema.parse(req.body);
+      const category = await storage.createBlogCategory(categoryData);
+      res.status(201).json(category);
+    } catch (error: any) {
+      console.error("Error creating blog category:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Invalid category data', details: error.errors });
+      }
+      res.status(500).json({ error: 'Failed to create blog category' });
+    }
+  });
+
+  app.put('/api/blog/categories/:id', requireAdmin, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const categoryData = insertBlogCategorySchema.partial().parse(req.body);
+      const category = await storage.updateBlogCategory(id, categoryData);
+      res.json(category);
+    } catch (error: any) {
+      console.error("Error updating blog category:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ error: 'Invalid category data', details: error.errors });
+      }
+      res.status(500).json({ error: 'Failed to update blog category' });
+    }
+  });
+
+  app.delete('/api/blog/categories/:id', requireAdmin, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteBlogCategory(id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting blog category:", error);
+      res.status(500).json({ error: 'Failed to delete blog category' });
     }
   });
 
