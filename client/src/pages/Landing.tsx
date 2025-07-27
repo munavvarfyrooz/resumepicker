@@ -14,7 +14,7 @@ export default function Landing() {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <Users className="h-5 w-5 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">SmartHire</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">ResumePicker</h1>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -39,12 +39,12 @@ export default function Landing() {
             🚀 AI-Powered Recruitment
           </Badge>
           <h2 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-            Intelligent CV Ranking &
-            <span className="text-blue-600 block">Job Matching Platform</span>
+            Smart Resume Screening &
+            <span className="text-blue-600 block">Candidate Selection</span>
           </h2>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-            Streamline your recruitment process with AI-powered candidate evaluation, 
-            bulk resume uploads, and intelligent matching algorithms.
+            Find the perfect candidates faster with AI-powered resume screening, 
+            bulk upload capabilities, and intelligent ranking algorithms.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 

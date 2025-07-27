@@ -1,8 +1,8 @@
-# SmartHire - CV Ranking & JD Matching Platform
+# ResumePicker - Smart Resume Screening & Candidate Selection Platform
 
 ## Overview
 
-SmartHire is an intelligent CV ranking and job description matching system built with a modern full-stack architecture. The platform enables recruiters to upload CVs in bulk, create job descriptions, and automatically rank candidates using a configurable transparent scoring algorithm.
+ResumePicker is a smart resume screening and candidate selection system built with a modern full-stack architecture. The platform enables recruiters to upload resumes in bulk, create job descriptions, and automatically rank candidates using AI-powered screening and intelligent ranking algorithms.
 
 ## User Preferences
 
