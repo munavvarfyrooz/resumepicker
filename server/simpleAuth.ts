@@ -2,6 +2,7 @@ import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import bcrypt from "bcrypt";
 import { storage } from "./storage";
 import connectPg from "connect-pg-simple";
 
@@ -22,7 +23,12 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
       return false;
     }
 
-    // Handle both old format (dot separator) and new format (colon separator)
+    // Check if it's a bcrypt hash (starts with $2b$, $2a$, or $2y$)
+    if (hash.startsWith('$2b$') || hash.startsWith('$2a$') || hash.startsWith('$2y$')) {
+      return await bcrypt.compare(password, hash);
+    }
+
+    // Handle legacy scrypt hashes - both old format (dot separator) and new format (colon separator)
     let salt: string, key: string;
     
     if (hash.includes('.')) {

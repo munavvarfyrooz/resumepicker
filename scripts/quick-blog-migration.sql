@@ -196,7 +196,7 @@ The organizations that thrive in the next decade will be those that embrace thes
   'Discover the 10 most important recruitment trends in 2025. Essential guide for HR leaders covering AI screening, predictive analytics, skills-based hiring, and digital transformation strategies.',
   true,
   NOW(),
-  'ADMIN_USER_ID_HERE', -- REPLACE with actual admin ID from step 1
+  '1cc265ae3c1c2e6747e3d168b7bf6391', -- REPLACE with actual admin ID from step 1
   NOW(),
   NOW()
 ) ON CONFLICT (slug) DO UPDATE SET
