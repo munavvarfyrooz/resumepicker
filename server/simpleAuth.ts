@@ -103,7 +103,7 @@ export function setupSimpleAuth(app: Express) {
       const user = await storage.getUserByUsername(username);
       if (!user) {
         console.log(`[AUTH] User not found: ${username}`);
-        return res.status(401).json({ message: "Invalid credentials" });
+        return res.status(401).json({ message: "Incorrect username or password" });
       }
 
       console.log(`[AUTH] User found, checking password...`);
@@ -111,7 +111,7 @@ export function setupSimpleAuth(app: Express) {
       const isValidPassword = await verifyPassword(password, user.password);
       if (!isValidPassword) {
         console.log(`[AUTH] Invalid password for: ${username}`);
-        return res.status(401).json({ message: "Invalid credentials" });
+        return res.status(401).json({ message: "Incorrect username or password" });
       }
 
       // Update last login
