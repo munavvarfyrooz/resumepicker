@@ -804,6 +804,19 @@ export class DatabaseStorage implements IStorage {
   async deleteMediaAsset(id: number): Promise<void> {
     // MediaAsset functionality will be implemented when needed
   }
+  async updateUserPassword(id: string, newPassword: string): Promise<void> {
+    const bcrypt = await import('bcrypt');
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    
+    await db
+      .update(users)
+      .set({ 
+        password: hashedPassword, 
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, id));
+  }
 }
 
 export const storage = new DatabaseStorage();

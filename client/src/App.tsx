@@ -13,6 +13,7 @@ import AuthPage from "@/pages/AuthPage";
 import BlogManagement from "@/pages/BlogManagement";
 import BeautifulBlog from "@/pages/BeautifulBlog";
 import BeautifulBlogPost from "@/pages/BeautifulBlogPost";
+import ChangePassword from "@/pages/ChangePassword";
 import NotFound from "@/pages/not-found";
 import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
@@ -44,6 +45,7 @@ function Router() {
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/blog-management" component={BlogManagement} />
           <Route path="/blog-view" component={BeautifulBlog} />
+          <Route path="/change-password" component={ChangePassword} />
         </>
       )}
       <Route component={NotFound} />

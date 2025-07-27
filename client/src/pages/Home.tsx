@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, BarChart3, Upload, Settings, LogOut, Edit, FileText } from "lucide-react";
+import { Users, BarChart3, Upload, Settings, LogOut, Edit, FileText, Lock } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 export default function Home() {
@@ -42,6 +42,12 @@ export default function Home() {
                   </Badge>
                 )}
               </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/change-password">
+                  <Lock className="h-4 w-4 mr-2" />
+                  Change Password
+                </Link>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

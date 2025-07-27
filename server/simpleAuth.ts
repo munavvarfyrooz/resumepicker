@@ -15,7 +15,7 @@ async function hashPassword(password: string): Promise<string> {
   return salt + ":" + derivedKey.toString("hex");
 }
 
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   try {
     // Check if hash is valid
     if (!hash || typeof hash !== 'string') {
