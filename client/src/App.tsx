@@ -11,8 +11,8 @@ import Home from "@/pages/Home";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AuthPage from "@/pages/AuthPage";
 import BlogManagement from "@/pages/BlogManagement";
-import BlogView from "@/pages/BlogView";
-import BlogPost from "@/pages/BlogPost";
+import BeautifulBlog from "@/pages/BeautifulBlog";
+import BeautifulBlogPost from "@/pages/BeautifulBlogPost";
 import NotFound from "@/pages/not-found";
 import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
@@ -39,8 +39,8 @@ function Router() {
           <Route path="/jobs/:id/editor" component={JDEditor} />
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/blog" component={BlogManagement} />
-          <Route path="/blog-view" component={BlogView} />
-          <Route path="/blog/:slug" component={BlogPost} />
+          <Route path="/blog-view" component={BeautifulBlog} />
+          <Route path="/blog/:slug" component={BeautifulBlogPost} />
         </>
       )}
       <Route component={NotFound} />

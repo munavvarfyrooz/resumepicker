@@ -113,9 +113,9 @@ export default function Home() {
                 <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mb-3">
                   <BarChart3 className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                 </div>
-                <CardTitle className="text-lg">View Blog</CardTitle>
+                <CardTitle className="text-lg">Beautiful Blog</CardTitle>
                 <CardDescription>
-                  Browse and read published blog posts and articles.
+                  Experience our stunning, modern blog with featured articles and insights.
                 </CardDescription>
               </CardHeader>
             </Card>
