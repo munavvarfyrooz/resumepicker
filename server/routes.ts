@@ -593,7 +593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const postData = insertBlogPostSchema.parse(req.body);
       const post = await storage.createBlogPost({
         ...postData,
-        authorId: req.user.id
+        authorId: req.userId
       });
       
       // Set categories if provided
@@ -603,7 +603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log the action
       await storage.logUserAction({
-        userId: req.user.id,
+        userId: req.userId,
         action: 'create_blog_post',
         resourceType: 'blog_post',
         resourceId: post.id,
@@ -633,7 +633,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Log the action
       await storage.logUserAction({
-        userId: req.user.id,
+        userId: req.userId,
         action: 'update_blog_post',
         resourceType: 'blog_post',
         resourceId: id,
