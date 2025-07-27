@@ -7,9 +7,9 @@
  * Run this after deploying to production to transfer all blog content.
  */
 
-const { Pool } = require('@neondatabase/serverless');
-const fs = require('fs');
-const path = require('path');
+import { Pool } from '@neondatabase/serverless';
+import fs from 'fs';
+import path from 'path';
 
 // Blog data to migrate (exported from development)
 const blogPosts = [
@@ -311,8 +311,8 @@ async function migrateBlogData() {
 }
 
 // Run migration if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   migrateBlogData().catch(console.error);
 }
 
-module.exports = { migrateBlogData };
+export { migrateBlogData };

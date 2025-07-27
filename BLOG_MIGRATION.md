@@ -26,12 +26,11 @@ Your development and production environments use separate databases. After deplo
 
 **Option A: Automatic Migration (Recommended)**
 ```bash
-# In your production terminal, run:
-npm run migrate-blog
-
-# Or manually:
+# In your production environment terminal/console, run:
 node scripts/migrate-blog-to-production.js
 ```
+
+**Important**: This script must be run in your **production environment**, not development, because it needs access to the production `DATABASE_URL`.
 
 **Option B: Manual Database Migration**
 
