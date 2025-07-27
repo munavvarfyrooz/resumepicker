@@ -26,6 +26,10 @@ function Router() {
 
   return (
     <Switch>
+      {/* Public blog routes - accessible without authentication */}
+      <Route path="/beautiful-blog" component={BeautifulBlog} />
+      <Route path="/beautiful-blog/:slug" component={BeautifulBlogPost} />
+      
       {isLoading || !isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
@@ -40,7 +44,6 @@ function Router() {
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/blog" component={BlogManagement} />
           <Route path="/blog-view" component={BeautifulBlog} />
-          <Route path="/blog/:slug" component={BeautifulBlogPost} />
         </>
       )}
       <Route component={NotFound} />

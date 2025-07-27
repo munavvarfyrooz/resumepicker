@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Users, BarChart3, Upload, Zap, Shield } from "lucide-react";
+import { CheckCircle, Users, BarChart3, Upload, Zap, Shield, BookOpen } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Landing() {
   return (
@@ -15,12 +16,19 @@ export default function Landing() {
             </div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">SmartHire</h1>
           </div>
-          <Button 
-            onClick={() => window.location.href = '/auth'}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            Login
-          </Button>
+          
+          <div className="flex items-center space-x-4">
+            <Link href="/beautiful-blog" className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              <BookOpen className="h-4 w-4" />
+              <span className="hidden sm:inline">Blog</span>
+            </Link>
+            <Button 
+              onClick={() => window.location.href = '/auth'}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Login
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -46,13 +54,16 @@ export default function Landing() {
             >
               Get Started
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="px-8 py-3"
-            >
-              Watch Demo
-            </Button>
+            <Link href="/beautiful-blog">
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="px-8 py-3"
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Read Our Blog
+              </Button>
+            </Link>
           </div>
         </div>
 

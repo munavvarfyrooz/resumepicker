@@ -4,8 +4,9 @@ import { useParams, Link } from 'wouter';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SEOMeta } from "@/components/ui/seo-meta";
 import type { BlogPostWithCategories } from "@shared/schema";
-import { Calendar, Clock, User, ArrowLeft, Tag, Eye, Share2, BookOpen } from "lucide-react";
+import { Calendar, Clock, User, ArrowLeft, Tag, Eye, Share2, BookOpen, Home } from "lucide-react";
 import { trackEvent } from '@/lib/analytics';
 import ReactMarkdown from 'react-markdown';
 
@@ -18,24 +19,46 @@ export default function BeautifulBlogPost() {
 
   useEffect(() => {
     if (post) {
+      const typedPost = post as BlogPostWithCategories;
       // Track page view
-      trackEvent('blog_post_view', 'blog', post.slug);
+      trackEvent('blog_post_view', 'blog', typedPost.slug);
       
-      // Update document title and meta tags
-      document.title = post.metaTitle || `${post.title} | SmartHire Blog`;
-      
-      // Update meta description
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription && post.metaDescription) {
-        metaDescription.setAttribute('content', post.metaDescription);
-      }
+      // Update document title
+      document.title = typedPost.metaTitle || `${typedPost.title} | SmartHire Blog`;
     }
   }, [post]);
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900">
-        <div className="max-w-4xl mx-auto px-4 py-12">
+        {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm dark:bg-gray-900/80 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link href="/beautiful-blog" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <BookOpen className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">SmartHire Blog</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Recruitment Intelligence</p>
+              </div>
+            </Link>
+            
+            <div className="flex items-center space-x-4">
+              <Link href="/beautiful-blog" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                All Articles
+              </Link>
+              <Link href="/" className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                <Home className="h-4 w-4" />
+                <span>Platform</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-4 py-12">
           <div className="animate-pulse space-y-8">
             <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
             <div className="space-y-4">
@@ -61,7 +84,7 @@ export default function BeautifulBlogPost() {
           <BookOpen className="h-16 w-16 text-gray-400 mx-auto" />
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Article Not Found</h1>
           <p className="text-gray-600 dark:text-gray-300">The article you're looking for doesn't exist or has been removed.</p>
-          <Link href="/blog-view">
+          <Link href="/beautiful-blog">
             <Button className="rounded-full">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Blog
@@ -76,6 +99,17 @@ export default function BeautifulBlogPost() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900" data-testid="blog-post-container">
+      <SEOMeta 
+        title={typedPost.metaTitle || `${typedPost.title} | SmartHire Blog`}
+        description={typedPost.metaDescription || typedPost.excerpt || `Read ${typedPost.title} on SmartHire Blog`}
+        keywords="recruitment, hiring, AI, talent acquisition, HR technology"
+        image={typedPost.featuredImage || undefined}
+        url={window.location.href}
+        type="article"
+        publishedTime={typedPost.publishedAt ? new Date(typedPost.publishedAt).toISOString() : undefined}
+        modifiedTime={new Date(typedPost.updatedAt).toISOString()}
+        author="SmartHire Team"
+      />
       {/* Back Navigation */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Link href="/blog-view">

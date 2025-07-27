@@ -4,8 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SEOMeta } from "@/components/ui/seo-meta";
 import type { BlogPostWithCategories, BlogCategory } from "@shared/schema";
-import { Calendar, Clock, User, ArrowRight, Search, Tag, Eye, Star, BookOpen } from "lucide-react";
+import { Calendar, Clock, User, ArrowRight, Search, Tag, Eye, Star, BookOpen, Home } from "lucide-react";
 import { Link } from "wouter";
 import { trackEvent } from '@/lib/analytics';
 
@@ -72,6 +73,35 @@ export default function BeautifulBlog() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900" data-testid="beautiful-blog-container">
+      <SEOMeta 
+        title="SmartHire Blog - Recruitment Intelligence & Insights"
+        description="Discover the latest insights, trends, and strategies in modern recruitment technology. From AI-powered hiring to data-driven talent acquisition."
+        keywords="recruitment, hiring, AI, talent acquisition, HR technology, job matching, CV ranking, applicant tracking"
+        url={window.location.href}
+        type="website"
+      />
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm dark:bg-gray-900/80 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <BookOpen className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">SmartHire</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Recruitment Intelligence</p>
+              </div>
+            </Link>
+            
+            <Link href="/" className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+              <Home className="h-4 w-4" />
+              <span>Back to Platform</span>
+            </Link>
+          </div>
+        </div>
+      </header>
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 opacity-10"></div>
