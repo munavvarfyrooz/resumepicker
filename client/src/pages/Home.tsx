@@ -150,7 +150,7 @@ export default function Home() {
         <div className="grid lg:grid-cols-3 gap-6">
           <Card className="lg:col-span-2 border-0 shadow-md">
             <CardHeader>
-              <CardTitle>How SmartHire Works</CardTitle>
+              <CardTitle>How ResumePicker Works</CardTitle>
               <CardDescription>
                 Your complete AI-powered recruitment workflow in one dashboard
               </CardDescription>

@@ -179,7 +179,7 @@ export default function Landing() {
             Ready to transform your recruitment process?
           </h3>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-            Get started with SmartHire today and experience the future of intelligent recruitment.
+            Get started with ResumePicker today and experience the future of smart resume screening.
           </p>
           <Button 
             size="lg" 
@@ -194,7 +194,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="container mx-auto px-4 py-8 mt-20 border-t border-gray-200 dark:border-gray-700">
         <div className="text-center text-gray-600 dark:text-gray-300">
-          <p>&copy; 2024 SmartHire. All rights reserved.</p>
+          <p>&copy; 2024 ResumePicker. All rights reserved.</p>
         </div>
       </footer>
     </div>

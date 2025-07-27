@@ -74,7 +74,7 @@ export default function BeautifulBlog() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900" data-testid="beautiful-blog-container">
       <SEOMeta 
-        title="SmartHire Blog - Recruitment Intelligence & Insights"
+        title="ResumePicker Blog - Recruitment Intelligence & Insights"
         description="Discover the latest insights, trends, and strategies in modern recruitment technology. From AI-powered hiring to data-driven talent acquisition."
         keywords="recruitment, hiring, AI, talent acquisition, HR technology, job matching, CV ranking, applicant tracking"
         url={window.location.href}
@@ -89,7 +89,7 @@ export default function BeautifulBlog() {
                 <BookOpen className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">SmartHire Blog</h1>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">ResumePicker Blog</h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Recruitment Intelligence</p>
               </div>
             </Link>
@@ -109,7 +109,7 @@ export default function BeautifulBlog() {
           <div className="text-center space-y-6">
             <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700">
               <BookOpen className="h-4 w-4 mr-2" />
-              SmartHire Insights & Resources
+              ResumePicker Insights & Resources
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white tracking-tight">
               Recruitment

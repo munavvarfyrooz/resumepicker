@@ -71,7 +71,7 @@ export default function BlogView() {
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">SmartHire Blog</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">ResumePicker Blog</h1>
               <p className="text-gray-600 dark:text-gray-300 mt-2">
                 Insights and tips for modern recruitment
               </p>

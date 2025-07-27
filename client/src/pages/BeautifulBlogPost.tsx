@@ -24,7 +24,7 @@ export default function BeautifulBlogPost() {
       trackEvent('blog_post_view', 'blog', typedPost.slug);
       
       // Update document title
-      document.title = typedPost.metaTitle || `${typedPost.title} | SmartHire Blog`;
+      document.title = typedPost.metaTitle || `${typedPost.title} | ResumePicker Blog`;
     }
   }, [post]);
 
@@ -40,7 +40,7 @@ export default function BeautifulBlogPost() {
                 <BookOpen className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-white">SmartHire Blog</h1>
+                <h1 className="text-xl font-bold text-gray-900 dark:text-white">ResumePicker Blog</h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400">Recruitment Intelligence</p>
               </div>
             </Link>
@@ -100,15 +100,15 @@ export default function BeautifulBlogPost() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-purple-900 dark:to-indigo-900" data-testid="blog-post-container">
       <SEOMeta 
-        title={typedPost.metaTitle || `${typedPost.title} | SmartHire Blog`}
-        description={typedPost.metaDescription || typedPost.excerpt || `Read ${typedPost.title} on SmartHire Blog`}
+        title={typedPost.metaTitle || `${typedPost.title} | ResumePicker Blog`}
+        description={typedPost.metaDescription || typedPost.excerpt || `Read ${typedPost.title} on ResumePicker Blog`}
         keywords="recruitment, hiring, AI, talent acquisition, HR technology"
         image={typedPost.featuredImage || undefined}
         url={window.location.href}
         type="article"
         publishedTime={typedPost.publishedAt ? new Date(typedPost.publishedAt).toISOString() : undefined}
         modifiedTime={new Date(typedPost.updatedAt).toISOString()}
-        author="SmartHire Team"
+        author="ResumePicker Team"
       />
       {/* Back Navigation */}
       <div className="max-w-4xl mx-auto px-4 py-8">

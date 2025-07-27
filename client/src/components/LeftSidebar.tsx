@@ -122,7 +122,7 @@ export default function LeftSidebar() {
               <Briefcase className="w-5 h-5 text-white" />
             </div>
             {!sidebarCollapsed && (
-              <h1 className="text-xl font-semibold text-text-primary">SmartHire</h1>
+              <h1 className="text-xl font-semibold text-text-primary">ResumePicker</h1>
             )}
           </div>
         </Link>

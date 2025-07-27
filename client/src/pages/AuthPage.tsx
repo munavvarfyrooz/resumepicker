@@ -263,7 +263,7 @@ export default function AuthPage() {
           {/* Footer */}
           <div className="text-center mt-8">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              SmartHire - Intelligent recruitment platform
+              ResumePicker - Smart resume screening platform
             </p>
           </div>
         </div>

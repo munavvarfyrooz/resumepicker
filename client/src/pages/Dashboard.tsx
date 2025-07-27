@@ -208,7 +208,7 @@ export default function Dashboard() {
               <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
                 <Briefcase className="w-4 h-4 text-white" />
               </div>
-              <h1 className="text-lg font-semibold text-text-primary">SmartHire</h1>
+              <h1 className="text-lg font-semibold text-text-primary">ResumePicker</h1>
             </div>
           </Link>
           <div className="flex space-x-1">

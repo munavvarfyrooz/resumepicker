@@ -12,7 +12,7 @@ export default function CustomLogin() {
             <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Users className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">SmartHire</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">ResumePicker</h1>
             <p className="text-gray-600 dark:text-gray-300">
               Sign in to access your recruitment dashboard
             </p>
@@ -23,7 +23,7 @@ export default function CustomLogin() {
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Welcome Back</CardTitle>
               <CardDescription>
-                Continue to your SmartHire dashboard
+                Continue to your ResumePicker dashboard
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -41,7 +41,7 @@ export default function CustomLogin() {
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg"
                 size="lg"
               >
-                Sign In to SmartHire
+                Sign In to ResumePicker
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
 
