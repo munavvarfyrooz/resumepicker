@@ -633,13 +633,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Log the action
-      await storage.logUserAction({
-        userId: req.user?.id,
-        action: 'update_blog_post',
-        resourceType: 'blog_post',
-        resourceId: id,
-        metadata: { title: post.title }
-      });
+      if (req.user?.id) {
+        await storage.logUserAction({
+          userId: req.user.id,
+          action: 'update_blog_post',
+          resourceType: 'blog_post',
+          resourceId: id,
+          metadata: { title: post.title }
+        });
+      }
       
       res.json(post);
     } catch (error: any) {
@@ -657,13 +659,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const post = await storage.publishBlogPost(id);
       
       // Log the action
-      await storage.logUserAction({
-        userId: req.user?.id,
-        action: 'publish_blog_post',
-        resourceType: 'blog_post',
-        resourceId: id,
-        metadata: { title: post.title }
-      });
+      if (req.user?.id) {
+        await storage.logUserAction({
+          userId: req.user.id,
+          action: 'publish_blog_post',
+          resourceType: 'blog_post',
+          resourceId: id,
+          metadata: { title: post.title }
+        });
+      }
       
       res.json(post);
     } catch (error) {
