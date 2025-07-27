@@ -1,24 +1,12 @@
--- Simple Blog Migration SQL for Production Database
--- Copy and paste this directly into your production database SQL console
+-- Quick Blog Migration - Use existing admin user
+-- This version works with any existing admin user in production
 
--- First, ensure admin user exists (this should already be created during deployment)
-INSERT INTO users (id, username, email, password, role, first_name, last_name, created_at, updated_at, last_login_at)
-VALUES (
-  'admin-001', 
-  'admin', 
-  'admin@smarthire.com', 
-  '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', -- admin/)%yK[NRt6!)+kP<Q{dWu
-  'admin', 
-  'Admin', 
-  'User', 
-  NOW(), 
-  NOW(), 
-  NOW()
-) ON CONFLICT (id) DO UPDATE SET
-  username = EXCLUDED.username,
-  password = EXCLUDED.password,
-  role = EXCLUDED.role,
-  updated_at = NOW();
+-- Step 1: Find the existing admin user ID
+-- (Run this first to get the admin user ID)
+SELECT id, username, email FROM users WHERE role = 'admin' LIMIT 1;
+
+-- Step 2: Replace 'ADMIN_USER_ID_HERE' below with the actual admin ID from step 1
+-- Then run the rest of the script
 
 -- Insert blog categories
 INSERT INTO blog_categories (name, slug, description, created_at) VALUES
@@ -26,7 +14,7 @@ INSERT INTO blog_categories (name, slug, description, created_at) VALUES
 ('Industry News', 'industry-news', 'Latest updates and trends in the hiring industry', NOW())
 ON CONFLICT (slug) DO NOTHING;
 
--- Insert main blog post
+-- Insert main blog post (REPLACE 'ADMIN_USER_ID_HERE' with actual admin ID)
 INSERT INTO blog_posts (
   title, 
   slug, 
@@ -208,7 +196,7 @@ The organizations that thrive in the next decade will be those that embrace thes
   'Discover the 10 most important recruitment trends in 2025. Essential guide for HR leaders covering AI screening, predictive analytics, skills-based hiring, and digital transformation strategies.',
   true,
   NOW(),
-  'admin-001',
+  'ADMIN_USER_ID_HERE', -- REPLACE with actual admin ID from step 1
   NOW(),
   NOW()
 ) ON CONFLICT (slug) DO UPDATE SET

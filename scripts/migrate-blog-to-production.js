@@ -218,20 +218,39 @@ async function migrateBlogData() {
     
     // Ensure admin user exists in production
     console.log('👤 Ensuring admin user exists...');
-    await pool.query(`
-      INSERT INTO users (id, username, email, password, role, first_name, last_name, created_at, updated_at, last_login_at)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), NOW())
-      ON CONFLICT (id) DO NOTHING
-    `, [
-      'admin-001', 
-      'admin', 
-      'admin@smarthire.com', 
-      '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // admin/)%yK[NRt6!)+kP<Q{dWu
-      'admin', 
-      'Admin', 
-      'User'
-    ]);
-    console.log('  ✅ Admin user ready');
+    try {
+      await pool.query(`
+        INSERT INTO users (id, username, email, password, role, first_name, last_name, created_at, updated_at, last_login_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW(), NOW())
+        ON CONFLICT (id) DO UPDATE SET
+          username = EXCLUDED.username,
+          password = EXCLUDED.password,
+          role = EXCLUDED.role,
+          updated_at = NOW()
+      `, [
+        'admin-001', 
+        'admin', 
+        'admin@smarthire.com', 
+        '$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // admin/)%yK[NRt6!)+kP<Q{dWu
+        'admin', 
+        'Admin', 
+        'User'
+      ]);
+      console.log('  ✅ Admin user ready');
+    } catch (emailError) {
+      // Handle case where email already exists with different ID
+      console.log('  ⚠️  Admin email already exists, checking existing user...');
+      const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', ['admin@smarthire.com']);
+      if (existingUser.rows.length > 0) {
+        console.log(`  ✅ Using existing admin user: ${existingUser.rows[0].id}`);
+        // Update the blog post data to use the existing admin user ID
+        for (const post of blogPosts) {
+          post.authorId = existingUser.rows[0].id;
+        }
+      } else {
+        throw emailError;
+      }
+    }
     
     // Migrate categories first
     console.log('📁 Migrating blog categories...');
