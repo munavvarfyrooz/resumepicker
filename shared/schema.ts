@@ -368,3 +368,7 @@ export interface UserUsageDetail {
   lastActivity: Date | null;
   totalSessions: number;
 }
+
+// Media types
+export type MediaAsset = typeof mediaAssets.$inferSelect;
+export type InsertMediaAsset = typeof mediaAssets.$inferInsert;

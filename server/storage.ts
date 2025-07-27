@@ -31,7 +31,9 @@ import {
   type InsertBlogPost,
   type BlogCategory,
   type InsertBlogCategory,
-  type BlogPostWithCategories
+  type BlogPostWithCategories,
+  type MediaAsset,
+  type InsertMediaAsset
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, count, sql, gte } from "drizzle-orm";
