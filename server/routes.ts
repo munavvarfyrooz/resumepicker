@@ -589,7 +589,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/blog/posts', requireAuth, async (req: any, res) => {
+  app.post('/api/blog/posts', requireAdmin, async (req: any, res) => {
     try {
       const postData = insertBlogPostSchema.parse(req.body);
       const post = await storage.createBlogPost({
@@ -621,7 +621,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/blog/posts/:id', requireAuth, async (req: any, res) => {
+  app.put('/api/blog/posts/:id', requireAdmin, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
       const postData = insertBlogPostSchema.partial().parse(req.body);
@@ -672,7 +672,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/blog/posts/:id', requireAuth, async (req: any, res) => {
+  app.delete('/api/blog/posts/:id', requireAdmin, async (req: any, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteBlogPost(id);

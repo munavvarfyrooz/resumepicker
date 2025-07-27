@@ -93,19 +93,21 @@ export default function Home() {
             </Card>
           </Link>
 
-          <Link href="/blog">
-            <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
-              <CardHeader className="pb-3">
-                <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mb-3">
-                  <Edit className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-                <CardTitle className="text-lg">Blog Management</CardTitle>
-                <CardDescription>
-                  Create and manage blog posts for your recruitment platform.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </Link>
+          {user?.role === 'admin' && (
+            <Link href="/blog">
+              <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">
+                <CardHeader className="pb-3">
+                  <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mb-3">
+                    <Edit className="h-6 w-6 text-green-600 dark:text-green-400" />
+                  </div>
+                  <CardTitle className="text-lg">Blog Management</CardTitle>
+                  <CardDescription>
+                    Create and manage blog posts for your recruitment platform. (Admin Only)
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+          )}
 
           <Link href="/blog-view">
             <Card className="cursor-pointer hover:shadow-lg transition-shadow duration-300 border-0 shadow-md">

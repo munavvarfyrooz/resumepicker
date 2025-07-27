@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,9 +17,40 @@ import { ImageUpload } from "@/components/ui/image-upload";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { trackEvent } from "@/lib/analytics";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function BlogManagement() {
+  const { user, isLoading } = useAuth();
   const { toast } = useToast();
+  
+  // Redirect non-admin users
+  useEffect(() => {
+    if (!isLoading && (!user || user.role !== 'admin')) {
+      toast({
+        title: "Access Denied",
+        description: "Blog management is restricted to administrators only.",
+        variant: "destructive",
+      });
+      window.location.href = '/';
+    }
+  }, [user, isLoading, toast]);
+  
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Don't render if not admin
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'draft' | 'published' | 'archived'>('all');
   const [editingPost, setEditingPost] = useState<BlogPostWithCategories | null>(null);
   const [showPostDialog, setShowPostDialog] = useState(false);
