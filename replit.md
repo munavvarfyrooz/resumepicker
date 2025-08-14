@@ -164,6 +164,7 @@ The application requires the following environment variables:
 - **Password Hash Migration**: Fixed legacy password hash format compatibility for existing users (fyru, admin-prod)
 - **Production Database Migration**: Successfully migrated database schema to production-ready state with proper authentication tables
 - **Deployment Scripts**: Created migration scripts and deployment documentation for production environments
+- **Admin Password Change Fixed**: Resolved authentication middleware issues preventing password changes in admin dashboard, now fully functional with Security tab
 - **Production Security Enhancement**: Updated admin password to cryptographically strong 20-character password (Rp9#kX8mQ2@vN5wT) using bcrypt hashing for production deployment
 - **Session Storage Fix**: Corrected session table name from 'session' to 'sessions' for proper PostgreSQL integration
 - **Production Password Sync**: Successfully updated admin passwords in production database with correct crypto hashes

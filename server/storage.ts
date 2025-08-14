@@ -50,6 +50,7 @@ export interface IStorage {
   updateUserRole(userId: string, role: 'user' | 'admin'): Promise<User>;
   updateUserStatus(userId: string, isActive: boolean): Promise<User>;
   updateUserLastLogin(userId: string): Promise<User>;
+  updateUserPassword(userId: string, newPassword: string): Promise<void>;
   
   // Session tracking
   createUserSession(userId: string, ipAddress?: string, userAgent?: string): Promise<UserSession>;
