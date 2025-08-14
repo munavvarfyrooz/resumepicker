@@ -11,14 +11,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, BarChart3, Activity, TrendingUp, UserCheck, UserX, Crown, Calendar } from "lucide-react";
+import { Users, BarChart3, Activity, TrendingUp, UserCheck, UserX, Crown, Calendar, Lock, Shield } from "lucide-react";
 import { format } from "date-fns";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import type { User, UserStats, UsageStats, UserUsageDetail } from "@shared/schema";
+
+// Password change schema
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(6, "New password must be at least 6 characters"),
+  confirmPassword: z.string().min(1, "Please confirm your new password"),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type ChangePasswordForm = z.infer<typeof changePasswordSchema>;
 
 export default function AdminDashboard() {
   const { toast } = useToast();
   const { user: currentUser, isAuthenticated, isLoading } = useAuth();
   const queryClient = useQueryClient();
+
+  // Password change form
+  const passwordForm = useForm<ChangePasswordForm>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
 
   // Redirect if not authenticated or not admin
   useEffect(() => {
@@ -36,25 +63,25 @@ export default function AdminDashboard() {
   }, [isAuthenticated, isLoading, currentUser, toast]);
 
   // Data fetching
-  const { data: users = [], isLoading: usersLoading } = useQuery({
+  const { data: users = [] as User[], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
     retry: false,
     enabled: !!currentUser && currentUser.role === 'admin',
   });
 
-  const { data: userStats, isLoading: userStatsLoading } = useQuery({
+  const { data: userStats, isLoading: userStatsLoading } = useQuery<UserStats>({
     queryKey: ["/api/admin/stats/users"],
     retry: false,
     enabled: !!currentUser && currentUser.role === 'admin',
   });
 
-  const { data: usageStats, isLoading: usageStatsLoading } = useQuery({
+  const { data: usageStats, isLoading: usageStatsLoading } = useQuery<UsageStats>({
     queryKey: ["/api/admin/stats/usage"],
     retry: false,
     enabled: !!currentUser && currentUser.role === 'admin',
   });
 
-  const { data: userUsageDetails = [], isLoading: userUsageLoading } = useQuery({
+  const { data: userUsageDetails = [] as UserUsageDetail[], isLoading: userUsageLoading } = useQuery<UserUsageDetail[]>({
     queryKey: ["/api/admin/users/usage"],
     retry: false,
     enabled: !!currentUser && currentUser.role === 'admin',
@@ -124,6 +151,46 @@ export default function AdminDashboard() {
       });
     },
   });
+
+  // Password change mutation
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: ChangePasswordForm) => {
+      const response = await apiRequest("POST", "/api/auth/change-password", {
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Password Updated",
+        description: "Your password has been changed successfully.",
+      });
+      passwordForm.reset();
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error as Error)) {
+        toast({
+          title: "Session Expired",
+          description: "Please log in again to continue.",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Password Change Failed",
+        description: (error as Error).message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onPasswordSubmit = (data: ChangePasswordForm) => {
+    changePasswordMutation.mutate(data);
+  };
 
   if (isLoading || !currentUser || currentUser.role !== 'admin') {
     return (
@@ -239,10 +306,11 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-400">
+          <TabsList className="grid w-full grid-cols-4 lg:w-500">
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="usage">Usage Details</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
 
           {/* User Management Tab */}
@@ -524,6 +592,147 @@ export default function AdminDashboard() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Security Tab */}
+          <TabsContent value="security">
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Lock className="h-5 w-5" />
+                    <span>Change Password</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Update your admin account password for enhanced security
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...passwordForm}>
+                    <form onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-4">
+                      <FormField
+                        control={passwordForm.control}
+                        name="currentPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Current Password</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="password"
+                                placeholder="Enter your current password"
+                                {...field}
+                                data-testid="input-current-password"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={passwordForm.control}
+                        name="newPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New Password</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="password"
+                                placeholder="Enter your new password (min 6 characters)"
+                                {...field}
+                                data-testid="input-new-password"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={passwordForm.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm New Password</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="password"
+                                placeholder="Confirm your new password"
+                                {...field}
+                                data-testid="input-confirm-password"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button
+                        type="submit"
+                        disabled={changePasswordMutation.isPending}
+                        className="w-full"
+                        data-testid="button-change-password"
+                      >
+                        {changePasswordMutation.isPending ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Updating Password...
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="h-4 w-4 mr-2" />
+                            Change Password
+                          </>
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+
+              <Card className="border-0 shadow-md">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Shield className="h-5 w-5" />
+                    <span>Security Information</span>
+                  </CardTitle>
+                  <CardDescription>
+                    Current security settings and best practices
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="p-4 bg-green-50 dark:bg-green-900 rounded-lg border border-green-200 dark:border-green-700">
+                    <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">Current Security Status</h4>
+                    <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
+                      <li>✅ Strong password hashing (bcrypt)</li>
+                      <li>✅ Session-based authentication</li>
+                      <li>✅ PostgreSQL session storage</li>
+                      <li>✅ Admin role protection</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900 rounded-lg border border-blue-200 dark:border-blue-700">
+                    <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">Password Requirements</h4>
+                    <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                      <li>• Minimum 6 characters length</li>
+                      <li>• Use a mix of letters, numbers & symbols</li>
+                      <li>• Avoid common passwords</li>
+                      <li>• Change regularly for security</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-4 bg-yellow-50 dark:bg-yellow-900 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                    <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">Security Tips</h4>
+                    <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                      <li>• Always log out when finished</li>
+                      <li>• Don't share admin credentials</li>
+                      <li>• Monitor user activity regularly</li>
+                      <li>• Update passwords after team changes</li>
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </main>
