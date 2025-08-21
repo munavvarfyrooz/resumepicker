@@ -10,7 +10,19 @@ const SMTP_PASS = process.env.SMTP_PASS; // AWS SES SMTP password
 const FROM_EMAIL = process.env.FROM_EMAIL || 'dev@resumepicker.com';
 const FROM_NAME = process.env.FROM_NAME || 'ResumePicker';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.FROM_EMAIL || 'dev@resumepicker.com';
-const APP_URL = process.env.APP_URL || 'http://localhost:5000';
+// Get the app URL dynamically - use Replit domain if available
+const getAppUrl = () => {
+  if (process.env.APP_URL) {
+    return process.env.APP_URL;
+  }
+  if (process.env.REPLIT_DOMAINS) {
+    const domain = process.env.REPLIT_DOMAINS.split(',')[0];
+    return `https://${domain}`;
+  }
+  return 'http://localhost:5000';
+};
+
+const APP_URL = getAppUrl();
 
 // Common SMTP configurations for popular email providers
 const SMTP_PRESETS: Record<string, { host: string; port: number; secure: boolean }> = {
@@ -59,6 +71,8 @@ class EmailService {
       console.warn('[EMAIL]   SMTP_PORT - SMTP port (optional, defaults to 587)');
       return;
     }
+
+    console.log('[EMAIL] Using app URL for email links:', APP_URL);
 
     this.initializeTransporter();
   }
