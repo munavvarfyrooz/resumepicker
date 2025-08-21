@@ -207,19 +207,26 @@ export function setupSimpleAuth(app: Express) {
 
       console.log(`[AUTH] Registration successful for: ${username}`);
       
-      // Send emails asynchronously (don't wait for them)
-      Promise.all([
-        // Send welcome email with verification link
-        import('./services/emailService').then(({ emailService }) => 
-          emailService.sendWelcomeEmail(newUser, verificationToken)
-        ),
-        // Send admin notification
-        import('./services/emailService').then(({ emailService }) =>
-          emailService.sendNewUserNotification(newUser)
-        )
-      ]).catch(error => {
-        console.error("[EMAIL] Failed to send registration emails:", error);
-      });
+      // Send emails asynchronously (don't wait for them) - only if email is provided
+      if (newUser.email) {
+        Promise.all([
+          // Send welcome email with verification link
+          import('./services/emailService').then(({ emailService }) => 
+            emailService.sendWelcomeEmail({ ...newUser, email: newUser.email! }, verificationToken)
+          ),
+          // Send admin notification
+          import('./services/emailService').then(({ emailService }) =>
+            emailService.sendNewUserNotification({ 
+              username: newUser.username,
+              email: newUser.email!,
+              firstName: newUser.firstName,
+              lastName: newUser.lastName
+            })
+          )
+        ]).catch(error => {
+          console.error("[EMAIL] Failed to send registration emails:", error);
+        });
+      }
       
       res.status(201).json({
         id: newUser.id,
@@ -257,12 +264,14 @@ export function setupSimpleAuth(app: Express) {
       // Update user to verified
       await storage.updateUserEmailVerified(user.id, true);
 
-      // Send confirmation email
-      import('./services/emailService').then(({ emailService }) =>
-        emailService.sendEmailVerifiedConfirmation(user)
-      ).catch(error => {
-        console.error("[EMAIL] Failed to send verification confirmation:", error);
-      });
+      // Send confirmation email if user has email
+      if (user.email) {
+        import('./services/emailService').then(({ emailService }) =>
+          emailService.sendEmailVerifiedConfirmation({ ...user, email: user.email! })
+        ).catch(error => {
+          console.error("[EMAIL] Failed to send verification confirmation:", error);
+        });
+      }
 
       console.log(`[AUTH] Email verified for user: ${user.username}`);
       
@@ -298,12 +307,14 @@ export function setupSimpleAuth(app: Express) {
       // Save reset token
       await storage.updateUserPasswordResetToken(user.id, resetToken, resetExpires);
 
-      // Send reset email
-      import('./services/emailService').then(({ emailService }) =>
-        emailService.sendPasswordResetEmail(user, resetToken)
-      ).catch(error => {
-        console.error("[EMAIL] Failed to send password reset email:", error);
-      });
+      // Send reset email if user has email
+      if (user.email) {
+        import('./services/emailService').then(({ emailService }) =>
+          emailService.sendPasswordResetEmail({ ...user, email: user.email! }, resetToken)
+        ).catch(error => {
+          console.error("[EMAIL] Failed to send password reset email:", error);
+        });
+      }
 
       console.log(`[AUTH] Password reset email sent to: ${user.username}`);
       
@@ -341,12 +352,14 @@ export function setupSimpleAuth(app: Express) {
       await storage.updateUserPassword(user.id, hashedPassword);
       await storage.updateUserPasswordResetToken(user.id, null, null);
 
-      // Send confirmation email
-      import('./services/emailService').then(({ emailService }) =>
-        emailService.sendPasswordChangedNotification(user)
-      ).catch(error => {
-        console.error("[EMAIL] Failed to send password change notification:", error);
-      });
+      // Send confirmation email if user has email
+      if (user.email) {
+        import('./services/emailService').then(({ emailService }) =>
+          emailService.sendPasswordChangedNotification({ ...user, email: user.email! })
+        ).catch(error => {
+          console.error("[EMAIL] Failed to send password change notification:", error);
+        });
+      }
 
       console.log(`[AUTH] Password reset successful for: ${user.username}`);
       
