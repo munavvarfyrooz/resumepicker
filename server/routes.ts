@@ -35,6 +35,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Note: Auth routes are handled in simpleAuth.ts
 
+  // Support contact endpoint
+  app.post('/api/support/contact', requireAuth, async (req: any, res) => {
+    try {
+      const { subject, category, message, email, name } = req.body;
+      const user = await storage.getUser(req.session.userId);
+      
+      if (!subject || !category || !message) {
+        return res.status(400).json({ message: "Subject, category, and message are required" });
+      }
+
+      // Import email service and send support email
+      const { emailService } = await import('./services/emailService');
+      await emailService.sendSupportEmail({
+        fromUser: {
+          name: name || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.username || 'User',
+          email: email || user?.email || 'noreply@resumepicker.com',
+          username: user?.username || 'User'
+        },
+        subject,
+        category,
+        message,
+        userId: req.session.userId
+      });
+
+      res.json({ message: "Support request sent successfully" });
+    } catch (error) {
+      console.error("Error sending support email:", error);
+      res.status(500).json({ message: "Failed to send support request" });
+    }
+  });
+
   // Admin routes
   app.get('/api/admin/users', requireAdmin, async (req: any, res) => {
     try {

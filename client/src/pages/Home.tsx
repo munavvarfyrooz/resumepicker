@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Users, BarChart3, Upload, Settings, LogOut, Edit, FileText, Lock } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { ContactSupport } from "@/components/ContactSupport";
 
 export default function Home() {
   const { user } = useAuth();
@@ -42,6 +43,7 @@ export default function Home() {
                   </Badge>
                 )}
               </div>
+              <ContactSupport />
               <Button variant="outline" size="sm" asChild>
                 <Link href="/change-password">
                   <Lock className="h-4 w-4 mr-2" />

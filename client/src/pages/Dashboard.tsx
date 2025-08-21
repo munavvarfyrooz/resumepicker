@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Settings, Download, Briefcase, Loader2, Brain } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { ContactSupport } from "@/components/ContactSupport";
 
 export default function Dashboard() {
   const params = useParams();
@@ -369,6 +370,8 @@ export default function Dashboard() {
                 <span className="hidden sm:inline">Export Shortlist ({selectedCandidateIds.length})</span>
                 <span className="sm:hidden">Export ({selectedCandidateIds.length})</span>
               </Button>
+              
+              <ContactSupport />
             </div>
           </div>
         </div>

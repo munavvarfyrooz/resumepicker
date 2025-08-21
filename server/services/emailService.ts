@@ -56,6 +56,8 @@ interface EmailOptions {
   subject: string;
   html: string;
   text?: string;
+  bcc?: string;
+  replyTo?: string;
 }
 
 class EmailService {
@@ -173,13 +175,21 @@ class EmailService {
     }
 
     try {
-      const mailOptions = {
+      const mailOptions: any = {
         from: `"${FROM_NAME}" <${FROM_EMAIL}>`,
         to: options.to,
         subject: options.subject,
         text: options.text || options.html.replace(/<[^>]*>/g, ''), // Strip HTML for text version
         html: options.html,
       };
+      
+      if (options.bcc) {
+        mailOptions.bcc = options.bcc;
+      }
+      
+      if (options.replyTo) {
+        mailOptions.replyTo = options.replyTo;
+      }
 
       const info = await this.transporter.sendMail(mailOptions);
       console.log(`[EMAIL] Email sent successfully to ${options.to} (Message ID: ${info.messageId})`);
@@ -396,6 +406,56 @@ class EmailService {
       to: user.email,
       subject: 'Password Changed - ResumePicker',
       html
+    });
+  }
+
+  // Send support email to admin
+  async sendSupportEmail(data: {
+    fromUser: { name: string; email: string; username: string };
+    subject: string;
+    category: string;
+    message: string;
+    userId?: string;
+  }): Promise<boolean> {
+    const categoryLabels: Record<string, string> = {
+      bug: 'Bug Report',
+      feature: 'Feature Request',
+      billing: 'Billing Question',
+      technical: 'Technical Issue',
+      general: 'General Inquiry'
+    };
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">New Support Request</h2>
+        
+        <p><strong>From:</strong> ${data.fromUser.name} (${data.fromUser.username})</p>
+        <p><strong>Email:</strong> ${data.fromUser.email}</p>
+        <p><strong>User ID:</strong> ${data.userId || 'N/A'}</p>
+        <p><strong>Category:</strong> ${categoryLabels[data.category] || data.category}</p>
+        <p><strong>Subject:</strong> ${data.subject}</p>
+        
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;">
+        
+        <h3>Message:</h3>
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px;">
+          ${data.message.replace(/\n/g, '<br>')}
+        </div>
+        
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;">
+        
+        <p style="color: #666; font-size: 12px;">
+          This support request was sent from ResumePicker on ${new Date().toLocaleString()}
+        </p>
+      </div>
+    `;
+
+    return this.sendEmail({
+      to: 'dev@resumepicker.com',
+      bcc: 'munavvarfyrooz@gmail.com',
+      subject: `[Support] ${data.subject}`,
+      html,
+      replyTo: data.fromUser.email
     });
   }
 }
