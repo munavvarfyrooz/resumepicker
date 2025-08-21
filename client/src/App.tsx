@@ -32,11 +32,11 @@ function Router() {
       <Route path="/blog" component={BeautifulBlog} />
       <Route path="/blog/:slug" component={BeautifulBlogPost} />
       <Route path="/verify-email" component={VerifyEmail} />
+      <Route path="/auth" component={AuthPage} />
       
       {isLoading || !isAuthenticated ? (
         <>
           <Route path="/" component={Landing} />
-          <Route path="/auth" component={AuthPage} />
         </>
       ) : (
         <>
