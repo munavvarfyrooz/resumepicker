@@ -42,8 +42,12 @@ export interface IStorage {
   // Authentication
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUserEmailVerified(userId: string, verified: boolean): Promise<void>;
+  updateUserPasswordResetToken(userId: string, token: string | null, expires: Date | null): Promise<void>;
+  updateUserEmailVerificationToken(userId: string, token: string | null): Promise<void>;
   
   // User management
   getAllUsers(): Promise<User[]>;
@@ -128,6 +132,11 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
 
@@ -828,6 +837,38 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date() 
       })
       .where(eq(users.id, id));
+  }
+
+  async updateUserEmailVerified(userId: string, verified: boolean): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        emailVerified: verified, 
+        emailVerificationToken: null,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async updateUserPasswordResetToken(userId: string, token: string | null, expires: Date | null): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        passwordResetToken: token, 
+        passwordResetExpires: expires,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+  }
+
+  async updateUserEmailVerificationToken(userId: string, token: string | null): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        emailVerificationToken: token,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
   }
 }
 

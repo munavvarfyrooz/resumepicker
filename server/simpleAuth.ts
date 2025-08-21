@@ -140,6 +140,223 @@ export function setupSimpleAuth(app: Express) {
     }
   });
 
+  // Registration endpoint
+  app.post("/api/register", async (req: Request, res: Response) => {
+    try {
+      const { username, email, password, firstName, lastName } = req.body;
+
+      // Validate required fields
+      if (!username || !email || !password) {
+        return res.status(400).json({ message: "Username, email, and password are required" });
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return res.status(400).json({ message: "Invalid email format" });
+      }
+
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      // Check if email already exists
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: "Email already registered" });
+      }
+
+      // Hash password
+      const hashedPassword = await hashPassword(password);
+
+      // Generate unique user ID and verification token
+      const userId = randomBytes(16).toString("hex");
+      const verificationToken = randomBytes(32).toString("hex");
+
+      // Create user
+      const newUser = await storage.createUser({
+        id: userId,
+        username,
+        email,
+        password: hashedPassword,
+        firstName: firstName || null,
+        lastName: lastName || null,
+        role: "user",
+        isActive: true,
+        emailVerified: false,
+        emailVerificationToken: verificationToken,
+      });
+
+      // Log user action (resourceId is not needed for user registration)
+      await storage.logUserAction({
+        userId: newUser.id,
+        action: "user_registered",
+        resourceType: "user",
+        metadata: { username, email }
+      });
+
+      // Store user in session (auto-login after registration)
+      (req.session as any).userId = newUser.id;
+      (req.session as any).user = {
+        id: newUser.id,
+        username: newUser.username,
+        role: newUser.role,
+      };
+
+      console.log(`[AUTH] Registration successful for: ${username}`);
+      
+      // Send emails asynchronously (don't wait for them)
+      Promise.all([
+        // Send welcome email with verification link
+        import('./services/emailService').then(({ emailService }) => 
+          emailService.sendWelcomeEmail(newUser, verificationToken)
+        ),
+        // Send admin notification
+        import('./services/emailService').then(({ emailService }) =>
+          emailService.sendNewUserNotification(newUser)
+        )
+      ]).catch(error => {
+        console.error("[EMAIL] Failed to send registration emails:", error);
+      });
+      
+      res.status(201).json({
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        emailVerified: false,
+        message: "Registration successful. Please check your email to verify your account."
+      });
+    } catch (error) {
+      console.error("[AUTH] Registration error:", error);
+      res.status(500).json({ message: "Internal server error during registration" });
+    }
+  });
+
+  // Email verification endpoint
+  app.get("/api/verify-email", async (req: Request, res: Response) => {
+    try {
+      const { token } = req.query;
+      
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({ message: "Verification token is required" });
+      }
+
+      // Find user with this verification token
+      const users = await storage.getAllUsers();
+      const user = users.find(u => u.emailVerificationToken === token);
+
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired verification token" });
+      }
+
+      // Update user to verified
+      await storage.updateUserEmailVerified(user.id, true);
+
+      // Send confirmation email
+      import('./services/emailService').then(({ emailService }) =>
+        emailService.sendEmailVerifiedConfirmation(user)
+      ).catch(error => {
+        console.error("[EMAIL] Failed to send verification confirmation:", error);
+      });
+
+      console.log(`[AUTH] Email verified for user: ${user.username}`);
+      
+      // Redirect to dashboard with success message
+      res.redirect('/?verified=true');
+    } catch (error) {
+      console.error("[AUTH] Email verification error:", error);
+      res.status(500).json({ message: "Internal server error during email verification" });
+    }
+  });
+
+  // Forgot password endpoint - sends reset email
+  app.post("/api/forgot-password", async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+      }
+
+      const user = await storage.getUserByEmail(email);
+      
+      // Always return success to prevent email enumeration
+      if (!user) {
+        console.log(`[AUTH] Password reset requested for non-existent email: ${email}`);
+        return res.json({ message: "If the email exists, a password reset link has been sent" });
+      }
+
+      // Generate reset token and expiry (1 hour)
+      const resetToken = randomBytes(32).toString("hex");
+      const resetExpires = new Date(Date.now() + 3600000); // 1 hour from now
+
+      // Save reset token
+      await storage.updateUserPasswordResetToken(user.id, resetToken, resetExpires);
+
+      // Send reset email
+      import('./services/emailService').then(({ emailService }) =>
+        emailService.sendPasswordResetEmail(user, resetToken)
+      ).catch(error => {
+        console.error("[EMAIL] Failed to send password reset email:", error);
+      });
+
+      console.log(`[AUTH] Password reset email sent to: ${user.username}`);
+      
+      res.json({ message: "If the email exists, a password reset link has been sent" });
+    } catch (error) {
+      console.error("[AUTH] Forgot password error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Reset password endpoint - actually changes the password
+  app.post("/api/reset-password", async (req: Request, res: Response) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token and new password are required" });
+      }
+
+      // Find user with this reset token
+      const users = await storage.getAllUsers();
+      const user = users.find(u => {
+        if (!u.passwordResetToken || !u.passwordResetExpires) return false;
+        return u.passwordResetToken === token && u.passwordResetExpires > new Date();
+      });
+
+      if (!user) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+
+      // Hash new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update password and clear reset token
+      await storage.updateUserPassword(user.id, hashedPassword);
+      await storage.updateUserPasswordResetToken(user.id, null, null);
+
+      // Send confirmation email
+      import('./services/emailService').then(({ emailService }) =>
+        emailService.sendPasswordChangedNotification(user)
+      ).catch(error => {
+        console.error("[EMAIL] Failed to send password change notification:", error);
+      });
+
+      console.log(`[AUTH] Password reset successful for: ${user.username}`);
+      
+      res.json({ message: "Password has been reset successfully" });
+    } catch (error) {
+      console.error("[AUTH] Reset password error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Logout endpoint - support both GET and POST
   const logoutHandler = (req: Request, res: Response) => {
     req.session.destroy((err) => {
