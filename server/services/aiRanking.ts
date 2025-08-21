@@ -146,6 +146,33 @@ Respond with JSON in this exact format:
   static async saveAIRankings(jobId: number, rankings: AIRankingResult[]): Promise<void> {
     try {
       for (const ranking of rankings) {
+        // Check if score record exists, if not create it
+        const existingScore = await storage.getScore(ranking.candidateId, jobId);
+        
+        if (!existingScore) {
+          // Create a basic score record with default values
+          await storage.saveScore({
+            candidateId: ranking.candidateId,
+            jobId: jobId,
+            totalScore: 0,
+            skillMatchScore: 0,
+            titleScore: 0,
+            seniorityScore: 0,
+            recencyScore: 0,
+            gapPenalty: 0,
+            missingMustHave: [],
+            explanation: 'Auto-created for AI ranking',
+            weights: {
+              skills: 50,
+              title: 20,
+              seniority: 15,
+              recency: 10,
+              gaps: 5
+            }
+          });
+        }
+        
+        // Now update with AI ranking
         await storage.updateScoreAIRanking(
           ranking.candidateId,
           jobId,
