@@ -664,6 +664,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test email endpoint
+  app.post("/api/test-email", requireAuth, async (req: any, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email address is required" });
+      }
+
+      const user = (req.session as any).user;
+      
+      // Send test email
+      const { emailService } = await import('./services/emailService');
+      const success = await emailService.sendEmail({
+        to: email,
+        subject: 'Test Email from ResumePicker',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #333;">Test Email Successful!</h2>
+            
+            <p>Hi ${user.username},</p>
+            
+            <p>This is a test email from ResumePicker to verify that your SMTP configuration is working correctly.</p>
+            
+            <p>If you're reading this, it means:</p>
+            <ul>
+              <li>✅ Your SMTP credentials are configured correctly</li>
+              <li>✅ Email sending is functional</li>
+              <li>✅ You can now use all email features in ResumePicker</li>
+            </ul>
+            
+            <p>Email features include:</p>
+            <ul>
+              <li>New user registration notifications</li>
+              <li>Email verification for new accounts</li>
+              <li>Password reset functionality</li>
+              <li>Various notification emails</li>
+            </ul>
+            
+            <hr style="border: 1px solid #eee; margin: 30px 0;">
+            
+            <p style="color: #666; font-size: 14px;">
+              This test was initiated from the ResumePicker dashboard.
+            </p>
+          </div>
+        `
+      });
+
+      if (success) {
+        res.json({ message: "Test email sent successfully!" });
+      } else {
+        res.status(500).json({ message: "Failed to send test email. Check server logs for details." });
+      }
+    } catch (error) {
+      console.error("[EMAIL] Test email error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Blog management routes
   app.get('/api/blog/posts', async (req, res) => {
     try {

@@ -70,39 +70,52 @@ class EmailService {
       auth: {
         user: SMTP_USER,
         pass: SMTP_PASS
-      }
+      },
+      // Default to Gmail settings if not specified
+      host: SMTP_HOST || 'smtp.gmail.com',
+      port: SMTP_PORT || 587,
+      secure: SMTP_SECURE || false
     };
 
-    // If SMTP_HOST is provided, use it
-    if (SMTP_HOST) {
-      smtpConfig.host = SMTP_HOST;
-      smtpConfig.port = SMTP_PORT;
-      smtpConfig.secure = SMTP_SECURE;
-    } else {
-      // Try to auto-detect from email domain
+    // If SMTP_HOST is not provided, try to auto-detect from email domain
+    if (!SMTP_HOST && SMTP_USER) {
       const emailDomain = SMTP_USER.split('@')[1];
       if (emailDomain) {
         const domain = emailDomain.toLowerCase();
         
         // Check for common providers
         if (domain.includes('gmail.com')) {
-          Object.assign(smtpConfig, SMTP_PRESETS.gmail);
+          smtpConfig.host = SMTP_PRESETS.gmail.host;
+          smtpConfig.port = SMTP_PRESETS.gmail.port;
+          smtpConfig.secure = SMTP_PRESETS.gmail.secure;
+          console.log(`[EMAIL] Auto-detected Gmail SMTP settings`);
         } else if (domain.includes('outlook.com') || domain.includes('hotmail.com')) {
-          Object.assign(smtpConfig, SMTP_PRESETS.outlook);
+          smtpConfig.host = SMTP_PRESETS.outlook.host;
+          smtpConfig.port = SMTP_PRESETS.outlook.port;
+          smtpConfig.secure = SMTP_PRESETS.outlook.secure;
+          console.log(`[EMAIL] Auto-detected Outlook SMTP settings`);
         } else if (domain.includes('yahoo.com')) {
-          Object.assign(smtpConfig, SMTP_PRESETS.yahoo);
+          smtpConfig.host = SMTP_PRESETS.yahoo.host;
+          smtpConfig.port = SMTP_PRESETS.yahoo.port;
+          smtpConfig.secure = SMTP_PRESETS.yahoo.secure;
+          console.log(`[EMAIL] Auto-detected Yahoo SMTP settings`);
         } else if (domain.includes('zoho.com')) {
-          Object.assign(smtpConfig, SMTP_PRESETS.zoho);
+          smtpConfig.host = SMTP_PRESETS.zoho.host;
+          smtpConfig.port = SMTP_PRESETS.zoho.port;
+          smtpConfig.secure = SMTP_PRESETS.zoho.secure;
+          console.log(`[EMAIL] Auto-detected Zoho SMTP settings`);
         } else {
-          console.warn(`[EMAIL] Unknown email provider: ${domain}`);
-          console.warn('[EMAIL] Please set SMTP_HOST and SMTP_PORT manually');
-          this.isConfigured = false;
-          return;
+          console.log(`[EMAIL] Using default Gmail SMTP settings for ${domain}`);
         }
-        
-        console.log(`[EMAIL] Auto-detected SMTP settings for ${domain}`);
       }
     }
+
+    console.log(`[EMAIL] SMTP Configuration:`, {
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      secure: smtpConfig.secure,
+      user: SMTP_USER
+    });
 
     this.transporter = nodemailer.createTransport(smtpConfig);
     
@@ -112,8 +125,18 @@ class EmailService {
         console.error('[EMAIL] SMTP connection failed:', error);
         console.error('[EMAIL] Please check your SMTP credentials and settings');
         if (SMTP_USER?.includes('gmail.com')) {
-          console.error('[EMAIL] For Gmail: Enable 2FA and use an App-Specific Password');
-          console.error('[EMAIL] See: https://support.google.com/accounts/answer/185833');
+          console.error('[EMAIL] ================== GMAIL SETUP REQUIRED ==================');
+          console.error('[EMAIL] Gmail blocks regular passwords for security reasons.');
+          console.error('[EMAIL] You MUST use an App-Specific Password:');
+          console.error('[EMAIL] ');
+          console.error('[EMAIL] 1. Enable 2-Factor Authentication in your Google Account');
+          console.error('[EMAIL] 2. Go to: https://myaccount.google.com/apppasswords');
+          console.error('[EMAIL] 3. Select "Mail" as the app');
+          console.error('[EMAIL] 4. Generate a 16-character password');
+          console.error('[EMAIL] 5. Use this password as SMTP_PASS (not your regular password)');
+          console.error('[EMAIL] ');
+          console.error('[EMAIL] Example: SMTP_PASS="abcd efgh ijkl mnop" (without spaces)');
+          console.error('[EMAIL] =========================================================');
         }
         this.isConfigured = false;
       } else {
