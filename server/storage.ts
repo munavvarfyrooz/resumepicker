@@ -48,6 +48,7 @@ export interface IStorage {
   updateUserEmailVerified(userId: string, verified: boolean): Promise<void>;
   updateUserPasswordResetToken(userId: string, token: string | null, expires: Date | null): Promise<void>;
   updateUserEmailVerificationToken(userId: string, token: string | null): Promise<void>;
+  verifyEmail(token: string): Promise<User | undefined>;
   
   // User management
   getAllUsers(): Promise<User[]>;
@@ -194,6 +195,31 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId))
       .returning();
     return user;
+  }
+
+  async verifyEmail(token: string): Promise<User | undefined> {
+    // Find user with this verification token
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.emailVerificationToken, token));
+    
+    if (!user) {
+      return undefined;
+    }
+
+    // Update user to mark email as verified and clear token
+    const [updatedUser] = await db
+      .update(users)
+      .set({ 
+        emailVerified: true, 
+        emailVerificationToken: null,
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+    
+    return updatedUser;
   }
 
   // Session tracking
