@@ -7,9 +7,9 @@ const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
 const SMTP_SECURE = process.env.SMTP_SECURE === 'true'; // true for 465, false for other ports - AWS SES uses STARTTLS on 587
 const SMTP_USER = process.env.SMTP_USER; // AWS SES SMTP username
 const SMTP_PASS = process.env.SMTP_PASS; // AWS SES SMTP password
-const FROM_EMAIL = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@resumepicker.ai';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'dev@resumepicker.com';
 const FROM_NAME = process.env.FROM_NAME || 'ResumePicker';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.SMTP_USER || 'admin@resumepicker.ai';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.FROM_EMAIL || 'dev@resumepicker.com';
 const APP_URL = process.env.APP_URL || 'http://localhost:5000';
 
 // Common SMTP configurations for popular email providers
