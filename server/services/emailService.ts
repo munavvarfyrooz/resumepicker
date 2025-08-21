@@ -2,11 +2,11 @@ import nodemailer from 'nodemailer';
 import { Transporter } from 'nodemailer';
 
 // Email configuration from environment variables
-const SMTP_HOST = process.env.SMTP_HOST;
+const SMTP_HOST = process.env.SMTP_HOST || 'email-smtp.ap-south-1.amazonaws.com'; // AWS SES endpoint
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
-const SMTP_SECURE = process.env.SMTP_SECURE === 'true'; // true for 465, false for other ports
-const SMTP_USER = process.env.SMTP_USER; // Your email address
-const SMTP_PASS = process.env.SMTP_PASS; // Your email password or app-specific password
+const SMTP_SECURE = process.env.SMTP_SECURE === 'true'; // true for 465, false for other ports - AWS SES uses STARTTLS on 587
+const SMTP_USER = process.env.SMTP_USER; // AWS SES SMTP username
+const SMTP_PASS = process.env.SMTP_PASS; // AWS SES SMTP password
 const FROM_EMAIL = process.env.FROM_EMAIL || process.env.SMTP_USER || 'noreply@resumepicker.ai';
 const FROM_NAME = process.env.FROM_NAME || 'ResumePicker';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.SMTP_USER || 'admin@resumepicker.ai';
@@ -71,14 +71,14 @@ class EmailService {
         user: SMTP_USER,
         pass: SMTP_PASS
       },
-      // Default to Gmail settings if not specified
-      host: SMTP_HOST || 'smtp.gmail.com',
-      port: SMTP_PORT || 587,
-      secure: SMTP_SECURE || false
+      // Use configured SMTP settings (AWS SES or custom)
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_SECURE
     };
 
-    // If SMTP_HOST is not provided, try to auto-detect from email domain
-    if (!SMTP_HOST && SMTP_USER) {
+    // If SMTP_HOST is not provided and email domain is detected, try to auto-detect
+    if (!process.env.SMTP_HOST && SMTP_USER) {
       const emailDomain = SMTP_USER.split('@')[1];
       if (emailDomain) {
         const domain = emailDomain.toLowerCase();
