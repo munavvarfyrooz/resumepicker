@@ -9,7 +9,10 @@ const SMTP_USER = process.env.SMTP_USER; // AWS SES SMTP username
 const SMTP_PASS = process.env.SMTP_PASS; // AWS SES SMTP password
 const FROM_EMAIL = process.env.FROM_EMAIL || 'dev@resumepicker.com';
 const FROM_NAME = process.env.FROM_NAME || 'ResumePicker';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.FROM_EMAIL || 'dev@resumepicker.com';
+// Support multiple admin emails separated by comma
+const ADMIN_EMAILS = process.env.ADMIN_EMAILS ? 
+  process.env.ADMIN_EMAILS.split(',').map(email => email.trim()) : 
+  ['dev@resumepicker.com', 'munavvarfyrooz@gmail.com'];
 // Get the app URL - use production domain or Replit domain
 const getAppUrl = () => {
   if (process.env.APP_URL) {
@@ -304,11 +307,18 @@ class EmailService {
       </div>
     `;
 
-    return this.sendEmail({
-      to: ADMIN_EMAIL,
-      subject: `New User Registration: ${user.username}`,
-      html
-    });
+    // Send to all admin emails
+    const results = await Promise.all(
+      ADMIN_EMAILS.map(adminEmail => 
+        this.sendEmail({
+          to: adminEmail,
+          subject: `New User Registration: ${user.username}`,
+          html
+        })
+      )
+    );
+    
+    return results.every(result => result === true);
   }
 
   // Send email verification confirmation

@@ -141,6 +141,8 @@ The application requires the following environment variables:
 - **Production Domain Fixed**: All email links now correctly use https://resumepicker.com instead of localhost
 - **Email Features Active**: Registration verification, password reset, admin notifications all working
 - **Verified Sender**: Using dev@resumepicker.com as verified FROM address in AWS SES
+- **Multiple Admin Notifications**: New user signup notifications now sent to both dev@resumepicker.com and munavvarfyrooz@gmail.com
+- **Email Verification Fixed**: Created /verify-email route and backend endpoint, resolving 404 errors and JSON parsing issues
 
 ### Previous Updates (August 21, 2025)
 - **Complete User Isolation Fix**: Both AI and Manual ranking systems now properly isolate user data
