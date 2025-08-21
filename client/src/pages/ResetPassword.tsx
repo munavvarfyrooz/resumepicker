@@ -60,9 +60,10 @@ export default function ResetPassword() {
     setLoading(true);
 
     try {
+      console.log('Sending reset password request with token:', token ? 'provided' : 'missing');
       await apiRequest("POST", "/api/reset-password", { 
-        token,
-        password 
+        token: token,
+        newPassword: password 
       });
       setSuccess(true);
       

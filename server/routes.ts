@@ -101,41 +101,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Forgot password endpoint
-  app.post('/api/forgot-password', async (req, res) => {
-    try {
-      const { email } = req.body;
-      
-      if (!email) {
-        return res.status(400).json({ message: "Email is required" });
-      }
-
-      // Find user by email
-      const user = await storage.getUserByEmail(email);
-      
-      if (!user) {
-        // Don't reveal if email exists for security
-        return res.json({ message: "If an account exists with this email, a reset link has been sent." });
-      }
-
-      // Generate reset token
-      const resetToken = require('crypto').randomBytes(32).toString('hex');
-      const resetExpires = new Date(Date.now() + 3600000); // 1 hour from now
-
-      // Save token to user
-      await storage.updateUserPasswordResetToken(user.id, resetToken, resetExpires);
-
-      // Send reset email
-      const { emailService } = await import('./services/emailService');
-      await emailService.sendPasswordResetEmail(user, resetToken);
-
-      res.json({ message: "If an account exists with this email, a reset link has been sent." });
-    } catch (error) {
-      console.error("Forgot password error:", error);
-      res.status(500).json({ message: "Failed to process password reset request" });
-    }
-  });
-
   // Validate reset token endpoint
   app.post('/api/validate-reset-token', async (req, res) => {
     try {
@@ -156,37 +121,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Token validation error:", error);
       res.status(500).json({ message: "Failed to validate token" });
-    }
-  });
-
-  // Reset password endpoint
-  app.post('/api/reset-password', async (req, res) => {
-    try {
-      const { token, password } = req.body;
-      
-      if (!token || !password) {
-        return res.status(400).json({ message: "Token and password are required" });
-      }
-
-      // Find user by token
-      const user = await storage.getUserByPasswordResetToken(token);
-      
-      if (!user || !user.passwordResetExpires || user.passwordResetExpires < new Date()) {
-        return res.status(400).json({ message: "Invalid or expired token" });
-      }
-
-      // Hash new password
-      const bcrypt = await import('bcrypt');
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Update password and clear reset token
-      await storage.updateUserPassword(user.id, hashedPassword);
-      await storage.updateUserPasswordResetToken(user.id, null, null);
-
-      res.json({ message: "Password reset successfully" });
-    } catch (error) {
-      console.error("Password reset error:", error);
-      res.status(500).json({ message: "Failed to reset password" });
     }
   });
 
