@@ -569,11 +569,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Generate AI rankings for candidates
-  app.post('/api/jobs/:jobId/ai-rank', async (req, res) => {
+  app.post('/api/jobs/:jobId/ai-rank', async (req: any, res) => {
     try {
+      // Get userId directly from session for proper user isolation
+      const sessionUserId = (req.session as any)?.userId;
+      if (!sessionUserId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      
       const jobId = parseInt(req.params.jobId);
       const { AIRankingService } = await import('./services/aiRanking');
-      const rankings = await AIRankingService.rankCandidatesForJob(jobId);
+      const rankings = await AIRankingService.rankCandidatesForJob(jobId, sessionUserId);
       
       if (rankings.length > 0) {
         await AIRankingService.saveAIRankings(jobId, rankings);

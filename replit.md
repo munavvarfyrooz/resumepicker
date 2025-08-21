@@ -135,7 +135,14 @@ The application requires the following environment variables:
 
 ## Recent Changes
 
-### Latest Updates (August 14, 2025)
+### Latest Updates (August 21, 2025)
+- **Critical User Isolation Bug Fixed**: Resolved major issue where AI ranking was processing ALL users' candidates instead of user-specific data
+- **AI Ranking Now Properly Isolated**: Fixed authentication middleware to correctly pass userId to AI ranking service
+- **Correct Ranking Ranges**: Candidates now ranked 1-8 for each user instead of incorrect global rankings (was showing 53-60 out of 60)
+- **Database Cleanup**: Removed cross-user score contamination and ensured proper data isolation
+- **Session Management Fix**: Improved session handling to ensure userId is properly propagated through all ranking operations
+
+### Previous Updates (August 14, 2025)
 - **Authentication System Complete**: Built entirely new simple authentication system from scratch after previous complex system failed
 - **Admin Login Working**: Successfully created working admin credentials with strong generated password that work in both development and production
 - **Admin Dashboard**: Created comprehensive admin panel with user management, analytics, and system monitoring capabilities

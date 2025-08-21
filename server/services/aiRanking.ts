@@ -10,11 +10,11 @@ export interface AIRankingResult {
 }
 
 export class AIRankingService {
-  static async rankCandidatesForJob(jobId: number): Promise<AIRankingResult[]> {
+  static async rankCandidatesForJob(jobId: number, userId?: string): Promise<AIRankingResult[]> {
     try {
-      // Get job details and candidates
-      const job = await storage.getJob(jobId);
-      const candidates = await storage.getCandidatesWithScores(jobId);
+      // Get job details and candidates - filtered by user for proper isolation
+      const job = await storage.getJob(jobId, userId);
+      const candidates = await storage.getCandidatesWithScores(jobId, userId);
       
       if (!job || candidates.length === 0) {
         return [];
