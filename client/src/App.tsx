@@ -15,6 +15,8 @@ import BeautifulBlog from "@/pages/BeautifulBlog";
 import BeautifulBlogPost from "@/pages/BeautifulBlogPost";
 import ChangePassword from "@/pages/ChangePassword";
 import VerifyEmail from "@/pages/VerifyEmail";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/not-found";
 import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
@@ -33,6 +35,8 @@ function Router() {
       <Route path="/blog/:slug" component={BeautifulBlogPost} />
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       
       {isLoading || !isAuthenticated ? (
         <>

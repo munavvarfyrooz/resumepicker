@@ -49,6 +49,7 @@ export interface IStorage {
   updateUserPasswordResetToken(userId: string, token: string | null, expires: Date | null): Promise<void>;
   updateUserEmailVerificationToken(userId: string, token: string | null): Promise<void>;
   verifyEmail(token: string): Promise<User | undefined>;
+  getUserByPasswordResetToken(token: string): Promise<User | undefined>;
   
   // User management
   getAllUsers(): Promise<User[]>;
@@ -220,6 +221,15 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return updatedUser;
+  }
+
+  async getUserByPasswordResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.passwordResetToken, token));
+    
+    return user;
   }
 
   // Session tracking
