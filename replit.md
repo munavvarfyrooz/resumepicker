@@ -135,7 +135,14 @@ The application requires the following environment variables:
 
 ## Recent Changes
 
-### Latest Updates (August 21, 2025)
+### Latest Updates (January 24, 2025)
+- **Email System Complete**: Switched from SendGrid to direct SMTP using nodemailer with AWS SES
+- **AWS SES Integration**: Successfully configured with email-smtp.ap-south-1.amazonaws.com endpoint
+- **Production Domain Fixed**: All email links now correctly use https://resumepicker.com instead of localhost
+- **Email Features Active**: Registration verification, password reset, admin notifications all working
+- **Verified Sender**: Using dev@resumepicker.com as verified FROM address in AWS SES
+
+### Previous Updates (August 21, 2025)
 - **Complete User Isolation Fix**: Both AI and Manual ranking systems now properly isolate user data
 - **Manual Ranking System Fixed**: Successfully implemented batch manual ranking with proper user isolation
 - **Dual Ranking Operational**: Both AI (GPT-4o powered) and Manual (algorithmic) ranking systems working independently

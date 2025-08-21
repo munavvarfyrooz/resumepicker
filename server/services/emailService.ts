@@ -10,14 +10,14 @@ const SMTP_PASS = process.env.SMTP_PASS; // AWS SES SMTP password
 const FROM_EMAIL = process.env.FROM_EMAIL || 'dev@resumepicker.com';
 const FROM_NAME = process.env.FROM_NAME || 'ResumePicker';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.FROM_EMAIL || 'dev@resumepicker.com';
-// Get the app URL dynamically - use Replit domain if available
+// Get the app URL - use production domain or Replit domain
 const getAppUrl = () => {
   if (process.env.APP_URL) {
     return process.env.APP_URL;
   }
-  if (process.env.REPLIT_DOMAINS) {
-    const domain = process.env.REPLIT_DOMAINS.split(',')[0];
-    return `https://${domain}`;
+  // Use production domain if available
+  if (process.env.NODE_ENV === 'production' || process.env.REPLIT_DOMAINS) {
+    return 'https://resumepicker.com';
   }
   return 'http://localhost:5000';
 };
