@@ -325,7 +325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const email = extractEmail(parsedCV.text) || `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`;
 
           // Check for duplicates by email or filename (within user's candidates)
-          const existingCandidates = await storage.getCandidates((req as any).user?.id);
+          const existingCandidates = await storage.getCandidates((req as any).userId);
           const duplicateByEmail = existingCandidates.find(c => c.email === email);
           const duplicateByFilename = existingCandidates.find(c => c.fileName === file.originalname);
           
