@@ -94,6 +94,8 @@ export interface IStorage {
   getScore(candidateId: number, jobId: number): Promise<Score | undefined>;
   saveScore(score: InsertScore): Promise<Score>;
   updateScoreWeights(jobId: number, weights: ScoreWeights): Promise<void>;
+  updateScoreAIRanking(candidateId: number, jobId: number, aiRank: number, aiRankReason: string): Promise<void>;
+  updateScoreManualRanking(candidateId: number, jobId: number, manualRank: number): Promise<void>;
   
   // Blog management
   getBlogPosts(status?: 'draft' | 'published' | 'archived'): Promise<BlogPostWithCategories[]>;
@@ -530,6 +532,15 @@ export class DatabaseStorage implements IStorage {
       .set({
         aiRank,
         aiRankReason,
+      })
+      .where(and(eq(scores.candidateId, candidateId), eq(scores.jobId, jobId)));
+  }
+
+  async updateScoreManualRanking(candidateId: number, jobId: number, manualRank: number): Promise<void> {
+    await db
+      .update(scores)
+      .set({
+        manualRank,
       })
       .where(and(eq(scores.candidateId, candidateId), eq(scores.jobId, jobId)));
   }

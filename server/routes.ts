@@ -434,17 +434,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/jobs/:jobId/rescore', async (req, res) => {
+  app.post('/api/jobs/:jobId/rescore', requireAuth, async (req: any, res) => {
     try {
       const jobId = parseInt(req.params.jobId);
+      const userId = req.userId; // Get user ID from auth middleware
       const weights: ScoreWeights = req.body.weights;
 
       if (!weights) {
         return res.status(400).json({ error: 'Weights are required' });
       }
 
-      // Get all candidates for this job
-      const candidates = await storage.getCandidatesWithScores(jobId);
+      // Get only the current user's candidates for this job
+      const candidates = await storage.getCandidatesWithScores(jobId, userId);
 
       // Re-score all candidates
       for (const candidate of candidates) {
@@ -470,6 +471,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, message: 'All candidates re-scored' });
     } catch (error) {
       res.status(500).json({ error: 'Failed to re-score candidates' });
+    }
+  });
+
+  // Generate manual rankings based on scores for all candidates
+  app.post('/api/jobs/:jobId/manual-rank', requireAuth, async (req: any, res) => {
+    try {
+      const jobId = parseInt(req.params.jobId);
+      const userId = req.userId;
+      const weights: ScoreWeights = req.body.weights || {
+        skills: 0.5,
+        title: 0.2,
+        seniority: 0.15,
+        recency: 0.1,
+        gaps: 0.05,
+      };
+
+      // Get only the current user's candidates for this job
+      const candidates = await storage.getCandidatesWithScores(jobId, userId);
+      const scoredCandidates = [];
+
+      // Calculate scores for all candidates
+      for (const candidate of candidates) {
+        const scoreBreakdown = await ScoringEngine.scoreCandidate(candidate.id, jobId, weights);
+        
+        const scoreData = {
+          candidateId: candidate.id,
+          jobId,
+          totalScore: scoreBreakdown.totalScore,
+          skillMatchScore: scoreBreakdown.skillMatchScore,
+          titleScore: scoreBreakdown.titleScore,
+          seniorityScore: scoreBreakdown.seniorityScore,
+          recencyScore: scoreBreakdown.recencyScore,
+          gapPenalty: scoreBreakdown.gapPenalty,
+          missingMustHave: scoreBreakdown.missingMustHave,
+          explanation: scoreBreakdown.explanation,
+          weights,
+        };
+
+        await storage.saveScore(scoreData);
+        scoredCandidates.push({ 
+          candidateId: candidate.id, 
+          totalScore: scoreBreakdown.totalScore,
+          name: candidate.name 
+        });
+      }
+
+      // Sort by score (highest first) and assign manual ranks
+      scoredCandidates.sort((a, b) => b.totalScore - a.totalScore);
+      
+      // Update manual ranks
+      for (let i = 0; i < scoredCandidates.length; i++) {
+        await storage.updateScoreManualRanking(
+          scoredCandidates[i].candidateId, 
+          jobId, 
+          i + 1  // Rank starts from 1
+        );
+      }
+
+      res.json({ 
+        success: true, 
+        message: `Manual ranking complete for ${scoredCandidates.length} candidates`,
+        rankings: scoredCandidates.map((c, i) => ({
+          rank: i + 1,
+          candidateId: c.candidateId,
+          name: c.name,
+          totalScore: c.totalScore
+        }))
+      });
+    } catch (error) {
+      console.error('Manual ranking error:', error);
+      res.status(500).json({ error: 'Failed to generate manual rankings' });
     }
   });
 
