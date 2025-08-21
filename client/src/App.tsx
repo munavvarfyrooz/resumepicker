@@ -14,6 +14,7 @@ import BlogManagement from "@/pages/BlogManagement";
 import BeautifulBlog from "@/pages/BeautifulBlog";
 import BeautifulBlogPost from "@/pages/BeautifulBlogPost";
 import ChangePassword from "@/pages/ChangePassword";
+import VerifyEmail from "@/pages/VerifyEmail";
 import NotFound from "@/pages/not-found";
 import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
@@ -27,9 +28,10 @@ function Router() {
 
   return (
     <Switch>
-      {/* Public blog routes - accessible without authentication */}
+      {/* Public routes - accessible without authentication */}
       <Route path="/blog" component={BeautifulBlog} />
       <Route path="/blog/:slug" component={BeautifulBlogPost} />
+      <Route path="/verify-email" component={VerifyEmail} />
       
       {isLoading || !isAuthenticated ? (
         <>
