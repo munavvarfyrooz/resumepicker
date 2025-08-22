@@ -123,6 +123,7 @@ export interface IStorage {
   
   // Utility methods
   getCandidateCountsByJob(): Promise<Record<number, number>>;
+  updateUserActivity(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -323,7 +324,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUserUsageDetails(): Promise<UserUsageDetail[]> {
     // Get all users first
-    const allUsers = await db.select().from(users).orderBy(desc(users.lastLoginAt));
+    const allUsers = await db.select().from(users).orderBy(desc(users.lastActivityAt));
     
     // Get jobs count per user
     const jobCounts = await db
@@ -361,9 +362,16 @@ export class DatabaseStorage implements IStorage {
       user,
       jobsCreated: jobCountMap.get(user.id) || 0,
       candidatesUploaded: candidateCountMap.get(user.id) || 0,
-      lastActivity: user.lastLoginAt,
+      lastActivity: user.lastActivityAt || user.lastLoginAt,
       totalSessions: sessionCountMap.get(user.id) || 0,
     }));
+  }
+  
+  // Update user's last activity timestamp
+  async updateUserActivity(userId: string): Promise<void> {
+    await db.update(users)
+      .set({ lastActivityAt: new Date() })
+      .where(eq(users.id, userId));
   }
   async getJobs(userId?: string): Promise<Job[]> {
     if (userId) {

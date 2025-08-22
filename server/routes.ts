@@ -261,7 +261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdBy: (req as any).userId,
       });
       
-      // Log user action
+      // Log user action and update activity
       await storage.logUserAction({
         userId: (req as any).userId,
         action: 'create_job',
@@ -269,6 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         resourceId: job.id,
         metadata: { title: job.title },
       });
+      await storage.updateUserActivity((req as any).userId);
       
       // Extract and save job skills
       if (validatedData.requirements) {
@@ -450,6 +451,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Save skills
           await storage.setCandidateSkills(candidate.id, parsedCV.skills);
+          
+          // Update user activity
+          await storage.updateUserActivity((req as any).userId);
 
           results.push({
             success: true,
@@ -477,6 +481,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const jobId = parseInt(req.params.jobId);
       const candidates = await storage.getCandidatesWithScores(jobId, (req as any).userId);
+      
+      // Update user activity when viewing candidates
+      await storage.updateUserActivity((req as any).userId);
+      
       res.json(candidates);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch candidates with scores' });
