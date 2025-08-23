@@ -10,32 +10,8 @@ export interface AIRankingResult {
 }
 
 export class AIRankingService {
-  static async testOpenAIConnection(): Promise<boolean> {
-    try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [{ role: "user", content: "Test connection. Respond with 'OK'." }],
-        max_tokens: 5
-      });
-      console.log('OpenAI API test response:', response.choices[0].message.content);
-      return true;
-    } catch (error) {
-      console.error('OpenAI API test failed:', error);
-      return false;
-    }
-  }
-
   static async rankCandidatesForJob(jobId: number, userId?: string): Promise<AIRankingResult[]> {
     try {
-      console.log('Starting AI ranking for job:', jobId, 'user:', userId);
-      
-      // Test OpenAI connection first
-      const connectionTest = await this.testOpenAIConnection();
-      if (!connectionTest) {
-        console.error('OpenAI API connection failed - API key might be invalid');
-        return [];
-      }
-      
       // Get job details and candidates - filtered by user for proper isolation
       const job = await storage.getJob(jobId, userId);
       const candidates = await storage.getCandidatesWithScores(jobId, userId);
@@ -99,7 +75,6 @@ Respond with JSON in this exact format:
 }
 `;
 
-      console.log('Calling OpenAI API for ranking with', candidateSummaries.length, 'candidates');
       const response = await openai.chat.completions.create({
         model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
         messages: [
@@ -115,8 +90,6 @@ Respond with JSON in this exact format:
         response_format: { type: "json_object" },
         temperature: 0.3,
       });
-      
-      console.log('OpenAI API response received successfully');
 
       const result = JSON.parse(response.choices[0].message.content || "{}");
       
