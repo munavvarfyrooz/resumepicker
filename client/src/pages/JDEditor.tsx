@@ -135,12 +135,40 @@ export default function JDEditor() {
   });
 
   const handleSave = () => {
+    // Validate required fields
+    if (!title || title.trim() === '') {
+      toast({
+        title: "Validation Error",
+        description: "Job title is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!description || description.trim() === '') {
+      toast({
+        title: "Validation Error",
+        description: "Job description is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (description.trim().length < 50) {
+      toast({
+        title: "Validation Error",
+        description: "Job description must be at least 50 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const jobData = {
-      title,
-      description,
+      title: title.trim(),
+      description: description.trim(),
       requirements: {
-        must: mustHaveSkills,
-        nice: niceToHaveSkills,
+        must: mustHaveSkills.filter(s => s.trim()),
+        nice: niceToHaveSkills.filter(s => s.trim()),
       },
       status: 'active', // Set to active when explicitly saved
     };

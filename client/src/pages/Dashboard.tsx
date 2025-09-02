@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useParams, Link, useLocation } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAppStore } from "@/store/appStore";
 import LeftSidebar from "@/components/LeftSidebar";
 import RankingTable from "@/components/RankingTable";
@@ -11,13 +11,15 @@ import FilterBar from "@/components/FilterBar";
 import ScoreWeightsModal from "@/components/ScoreWeightsModal";
 import JDEditor from "./JDEditor";
 import { Button } from "@/components/ui/button";
-import { Settings, Download, Briefcase, Loader2, Brain } from "lucide-react";
+import { Settings, Download, Briefcase, Loader2, Brain, LogOut } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { ContactSupport } from "@/components/ContactSupport";
 
 export default function Dashboard() {
   const params = useParams();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const {
     selectedJob,
     setSelectedJob,
@@ -42,8 +44,8 @@ export default function Dashboard() {
 
   // Fetch candidates for selected job
   const { data: jobCandidates = [], isLoading: candidatesLoading } = useQuery({
-    queryKey: ['/api/jobs', selectedJob?.id, 'candidates'],
-    enabled: !!selectedJob,
+    queryKey: selectedJob?.id ? ['/api/jobs', selectedJob.id, 'candidates'] : ['no-job'],
+    enabled: !!selectedJob?.id,
     select: (data: any) => Array.isArray(data) ? data : [],
   });
 
@@ -111,7 +113,29 @@ export default function Dashboard() {
 
   const [isCalculatingScores, setIsCalculatingScores] = useState(false);
   const [isAIRanking, setIsAIRanking] = useState(false);
-  const { toast } = useToast();
+  
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/logout");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      setLocation("/auth");
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Logout failed",
+        description: "Unable to logout. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleCalculateScores = async () => {
     if (!selectedJob || isCalculatingScores) return;
@@ -119,12 +143,12 @@ export default function Dashboard() {
     setIsCalculatingScores(true);
     
     toast({
-      title: "Calculating Scores",
-      description: "Processing candidate rankings with AI analysis...",
+      title: "Calculating Manual Rankings",
+      description: "Processing candidates based on weighted scoring...",
     });
 
     try {
-      await apiRequest('POST', `/api/jobs/${selectedJob.id}/rescore`, {
+      const response = await apiRequest('POST', `/api/jobs/${selectedJob.id}/manual-rank`, {
         weights: {
           skills: 0.5,
           title: 0.2,
@@ -138,8 +162,8 @@ export default function Dashboard() {
       queryClient.invalidateQueries({ queryKey: ['/api/jobs', selectedJob.id, 'candidates'] });
       
       toast({
-        title: "Scores Updated",
-        description: "All candidate rankings have been recalculated successfully",
+        title: "Manual Ranking Complete",
+        description: response.message || "All candidates have been ranked based on weighted scores",
       });
     } catch (error) {
       console.error('Failed to calculate scores:', error);
@@ -307,7 +331,7 @@ export default function Dashboard() {
               </div>
             </div>
             
-            <div className="flex items-center space-x-2 flex-wrap">
+            <div className="flex items-center space-x-2 flex-wrap gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -372,6 +396,16 @@ export default function Dashboard() {
               </Button>
               
               <ContactSupport />
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => logoutMutation.mutate()}
+                className="text-xs md:text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <LogOut className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
             </div>
           </div>
         </div>
@@ -452,7 +486,7 @@ export default function Dashboard() {
 
         {view === 'jd-editor' && (
           <div className="flex-1 overflow-auto">
-            <JDEditor />
+            <JDEditor job={selectedJob} />
           </div>
         )}
       </div>

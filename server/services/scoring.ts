@@ -86,6 +86,14 @@ export class ScoringEngine {
     candidateSkills: string[],
     jobSkills: { skill: string; required: boolean }[]
   ): { score: number; missingMust: string[] } {
+    // If no job skills are defined, return 0 score
+    if (!jobSkills || jobSkills.length === 0) {
+      return {
+        score: 0,
+        missingMust: [],
+      };
+    }
+
     const requiredSkills = jobSkills.filter(s => s.required).map(s => s.skill.toLowerCase());
     const niceToHaveSkills = jobSkills.filter(s => !s.required).map(s => s.skill.toLowerCase());
     const candidateSkillsLower = candidateSkills.map(s => s.toLowerCase());
@@ -102,11 +110,24 @@ export class ScoringEngine {
       candidateSkillsLower.some(cSkill => cSkill.includes(skill) || skill.includes(cSkill))
     ).length;
 
-    const requiredScore = requiredSkills.length > 0 ? (matchedRequired / requiredSkills.length) * 80 : 80;
-    const niceToHaveScore = niceToHaveSkills.length > 0 ? (matchedNiceToHave / niceToHaveSkills.length) * 20 : 20;
+    // Calculate scores based on what's actually defined
+    let score = 0;
+    
+    if (requiredSkills.length > 0) {
+      // Required skills are worth 80% of total score
+      score += (matchedRequired / requiredSkills.length) * 80;
+    }
+    
+    if (niceToHaveSkills.length > 0) {
+      // Nice-to-have skills are worth 20% of total score
+      score += (matchedNiceToHave / niceToHaveSkills.length) * 20;
+    } else if (requiredSkills.length > 0) {
+      // If only required skills exist, they're worth 100%
+      score = (matchedRequired / requiredSkills.length) * 100;
+    }
 
     return {
-      score: Math.round(requiredScore + niceToHaveScore),
+      score: Math.round(score),
       missingMust: missingMust,
     };
   }

@@ -158,8 +158,8 @@ export default function RankingTable() {
       maxSize: 200,
     },
     {
-      id: 'totalScore',
-      accessorFn: (row) => row.score?.totalScore || 0,
+      id: 'manualRank',
+      accessorFn: (row) => row.score?.manualRank || 999,
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -177,23 +177,25 @@ export default function RankingTable() {
         </Button>
       ),
       cell: ({ row }) => {
-        const score = row.original.score?.totalScore || 0;
-        const getScoreColor = (score: number) => {
-          if (score >= 80) return 'text-success';
-          if (score >= 60) return 'text-warning';
-          return 'text-danger';
-        };
+        const manualRank = row.original.score?.manualRank;
+        const totalScore = row.original.score?.totalScore || 0;
+        
+        if (!manualRank) {
+          return <span className="text-gray-400 text-sm">Not ranked</span>;
+        }
 
         return (
           <div className="flex items-center space-x-2">
-            <div className={`w-10 h-10 rounded-full border-4 flex items-center justify-center ${
-              score >= 80 ? 'border-success' : score >= 60 ? 'border-warning' : 'border-danger'
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+              manualRank <= 3 ? 'bg-green-100 text-green-800' : 
+              manualRank <= 6 ? 'bg-yellow-100 text-yellow-800' : 
+              'bg-gray-100 text-gray-800'
             }`}>
-              <span className={`text-sm font-semibold ${getScoreColor(score)}`}>
-                {score}
-              </span>
+              #{manualRank}
             </div>
-            <div className="text-sm text-text-secondary">/100</div>
+            <div className="text-xs text-gray-500">
+              Score: {totalScore}
+            </div>
           </div>
         );
       },

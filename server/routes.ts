@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import multer from "multer";
 import { insertJobSchema, insertCandidateSchema, insertBlogPostSchema, insertBlogCategorySchema, type ScoreWeights } from "@shared/schema";
 import path from "path";
+import { fileURLToPath } from 'url';
 import { readFile } from "fs/promises";
 import { CVParser } from "./services/parsing";
 import { ScoringEngine } from "./services/scoring";
@@ -569,8 +570,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate manual rankings based on scores for all candidates
   app.post('/api/jobs/:jobId/manual-rank', requireAuth, async (req: any, res) => {
     try {
+      const startTime = Date.now();
       const jobId = parseInt(req.params.jobId);
       const userId = req.userId;
+      const { useSuperOptimized = true, clearCache = false } = req.body;
       const weights: ScoreWeights = req.body.weights || {
         skills: 0.5,
         title: 0.2,
@@ -581,56 +584,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get only the current user's candidates for this job
       const candidates = await storage.getCandidatesWithScores(jobId, userId);
-      const scoredCandidates = [];
-
-      // Calculate scores for all candidates
-      for (const candidate of candidates) {
-        const scoreBreakdown = await ScoringEngine.scoreCandidate(candidate.id, jobId, weights);
+      const candidateIds = candidates.map(c => c.id);
+      
+      if (useSuperOptimized) {
+        // Use super optimized scoring with caching and parallel processing
+        const { SuperOptimizedScoringEngine } = await import('./services/superOptimizedScoring');
         
-        const scoreData = {
-          candidateId: candidate.id,
-          jobId,
-          totalScore: scoreBreakdown.totalScore,
-          skillMatchScore: scoreBreakdown.skillMatchScore,
-          titleScore: scoreBreakdown.titleScore,
-          seniorityScore: scoreBreakdown.seniorityScore,
-          recencyScore: scoreBreakdown.recencyScore,
-          gapPenalty: scoreBreakdown.gapPenalty,
-          missingMustHave: scoreBreakdown.missingMustHave,
-          explanation: scoreBreakdown.explanation,
-          weights,
+        if (clearCache) {
+          SuperOptimizedScoringEngine.clearCache(jobId);
+        }
+        
+        // Warm up cache if needed
+        if (candidateIds.length > 50) {
+          await SuperOptimizedScoringEngine.warmUpCache(jobId, candidateIds, weights);
+        }
+        
+        // Get all scores in parallel batches
+        const scoreMap = await SuperOptimizedScoringEngine.batchScore(candidateIds, jobId, weights);
+        
+        // Save scores and prepare response
+        const scoredCandidates = [];
+        const savePromises = [];
+        
+        for (const candidate of candidates) {
+          const scoreData = scoreMap.get(candidate.id);
+          if (scoreData) {
+            scoredCandidates.push({
+              ...candidate,
+              score: scoreData
+            });
+            
+            savePromises.push(storage.saveScore({
+              candidateId: candidate.id,
+              jobId,
+              ...scoreData,
+              weights
+            }));
+          }
+        }
+        
+        await Promise.all(savePromises);
+        
+        // Sort and assign ranks
+        scoredCandidates.sort((a, b) => (b.score?.totalScore || 0) - (a.score?.totalScore || 0));
+        
+        const updateRankPromises = scoredCandidates.map((candidate, index) => 
+          storage.updateScoreManualRanking(candidate.id, jobId, index + 1)
+        );
+        await Promise.all(updateRankPromises);
+        
+        const duration = Date.now() - startTime;
+        console.log(`[SuperOptimized Manual Rank] Completed in ${duration}ms for ${candidateIds.length} candidates`);
+        
+        res.json({
+          success: true,
+          message: `Manual ranking completed in ${duration}ms`,
+          candidatesRanked: scoredCandidates.length,
+          method: 'super_optimized'
+        });
+        
+      } else {
+        // Fallback to original optimized scoring
+        const { OptimizedScoringEngine } = await import('./services/optimizedScoring');
+        
+        // Batch fetch all data at once
+        const batchData = await OptimizedScoringEngine.batchFetchScoringData(candidateIds, jobId);
+        
+        // Calculate scores using pre-fetched data
+        const scoreResults = candidates.map(candidate => {
+          const data = batchData.get(candidate.id);
+        if (!data) {
+          return null;
+        }
+        
+        const scoreBreakdown = OptimizedScoringEngine.calculateScoreFromBatchData(data, weights);
+        
+        return {
+          candidate,
+          scoreBreakdown,
+          scoreData: {
+            candidateId: candidate.id,
+            jobId,
+            totalScore: scoreBreakdown.totalScore,
+            skillMatchScore: scoreBreakdown.skillMatchScore,
+            titleScore: scoreBreakdown.titleScore,
+            seniorityScore: scoreBreakdown.seniorityScore,
+            recencyScore: scoreBreakdown.recencyScore,
+            gapPenalty: scoreBreakdown.gapPenalty,
+            missingMustHave: scoreBreakdown.missingMustHave,
+            explanation: scoreBreakdown.explanation,
+            weights,
+          }
         };
-
-        await storage.saveScore(scoreData);
-        scoredCandidates.push({ 
-          candidateId: candidate.id, 
-          totalScore: scoreBreakdown.totalScore,
-          name: candidate.name 
+      }).filter(result => result !== null);
+      
+      // Save all scores in parallel
+      const savePromises = scoreResults.map(result => 
+        storage.saveScore(result!.scoreData)
+      );
+      await Promise.all(savePromises);
+      
+      // Collect scored candidates
+      for (const result of scoreResults) {
+        scoredCandidates.push({
+          candidateId: result.candidate.id,
+          totalScore: result.scoreBreakdown.totalScore,
+          name: result.candidate.name
         });
       }
 
       // Sort by score (highest first) and assign manual ranks
       scoredCandidates.sort((a, b) => b.totalScore - a.totalScore);
       
-      // Update manual ranks
-      for (let i = 0; i < scoredCandidates.length; i++) {
-        await storage.updateScoreManualRanking(
-          scoredCandidates[i].candidateId, 
-          jobId, 
-          i + 1  // Rank starts from 1
-        );
-      }
+      console.log('[Manual Rank] Sorted candidates:', scoredCandidates.map((c, i) => ({
+        rank: i + 1,
+        name: c.name,
+        score: c.totalScore
+      })));
+      
+      // Update manual ranks in parallel
+      const rankPromises = scoredCandidates.map((candidate, index) =>
+        storage.updateScoreManualRanking(
+          candidate.candidateId,
+          jobId,
+          index + 1  // Rank starts from 1
+        )
+      );
+      await Promise.all(rankPromises);
 
-      res.json({ 
-        success: true, 
-        message: `Manual ranking complete for ${scoredCandidates.length} candidates`,
-        rankings: scoredCandidates.map((c, i) => ({
-          rank: i + 1,
-          candidateId: c.candidateId,
-          name: c.name,
-          totalScore: c.totalScore
-        }))
-      });
+      const elapsedTime = Date.now() - startTime;
+      console.log(`[Manual Rank] Completed in ${elapsedTime}ms for ${scoredCandidates.length} candidates`);
+      
+        res.json({ 
+          success: true, 
+          message: `Manual ranking complete for ${scoredCandidates.length} candidates`,
+          rankings: scoredCandidates.map((c, i) => ({
+            rank: i + 1,
+            candidateId: c.candidateId,
+            name: c.name,
+            totalScore: c.totalScore
+          })),
+          processingTime: elapsedTime,
+          method: 'optimized'
+        });
+      }
     } catch (error) {
       console.error('Manual ranking error:', error);
       res.status(500).json({ error: 'Failed to generate manual rankings' });
@@ -742,17 +839,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const jobId = parseInt(req.params.jobId);
-      const { AIRankingService } = await import('./services/aiRanking');
-      const rankings = await AIRankingService.rankCandidatesForJob(jobId, sessionUserId);
+      const { useImproved = true, clearCache = false } = req.body;
       
-      if (rankings.length > 0) {
-        await AIRankingService.saveAIRankings(jobId, rankings);
+      // Use improved AI ranking by default
+      if (useImproved) {
+        const { ImprovedAIRankingService } = await import('./services/aiRankingImproved');
+        
+        if (clearCache) {
+          ImprovedAIRankingService.clearCache(jobId);
+        }
+        
+        const rankings = await ImprovedAIRankingService.rankCandidatesForJob(jobId, sessionUserId);
+        
+        if (rankings.length > 0) {
+          await ImprovedAIRankingService.saveAIRankings(jobId, rankings);
+        }
+        
+        res.json({ success: true, rankings, method: 'improved' });
+      } else {
+        // Fallback to original AI ranking
+        const { AIRankingService } = await import('./services/aiRanking');
+        const rankings = await AIRankingService.rankCandidatesForJob(jobId, sessionUserId);
+        
+        if (rankings.length > 0) {
+          await AIRankingService.saveAIRankings(jobId, rankings);
+        }
+        
+        res.json({ success: true, rankings, method: 'original' });
       }
-      
-      res.json({ success: true, rankings });
-    } catch (error) {
+    } catch (error: any) {
       console.error('AI ranking error:', error);
-      res.status(500).json({ error: 'Failed to generate AI rankings' });
+      
+      // Send specific error message to client for better debugging
+      const errorMessage = error?.message || 'Failed to generate AI rankings';
+      const statusCode = errorMessage.includes('API key') ? 400 : 500;
+      
+      res.status(statusCode).json({ 
+        error: errorMessage,
+        details: errorMessage.includes('API key') 
+          ? 'The OpenAI API key is invalid or missing. Please update the OPENAI_API_KEY in your .env file with a valid key from https://platform.openai.com/api-keys'
+          : undefined
+      });
     }
   });
 
@@ -1016,10 +1143,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up media routes for image uploads
   setupMediaRoutes(app);
 
+  // Advanced logging routes
+  app.get('/api/logs/summary', requireAuth, async (req, res) => {
+    try {
+      const { logger } = await import('./services/advancedLogger');
+      res.json({
+        errorSummary: logger.getErrorSummary(),
+        performanceMetrics: []
+      });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to fetch log summary' });
+    }
+  });
+
+  app.post('/api/logs/clear-errors', requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const { logger } = await import('./services/advancedLogger');
+      logger.clearErrorFrequency();
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to clear error frequency' });
+    }
+  });
+
   // Serve static files
-  app.use('/uploads', express.static(path.join(import.meta.dirname, '..', 'uploads')));
-  app.use('/test-blog-images', express.static(path.join(import.meta.dirname, '..', 'test-blog-images')));
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+  app.use('/test-blog-images', express.static(path.join(__dirname, '..', 'test-blog-images')));
 
   const httpServer = createServer(app);
+  
+  // WebSocket support for log streaming
+  if (process.env.NODE_ENV === 'development') {
+    const WebSocket = await import('ws');
+    const { LogWebSocketHandler } = await import('./services/advancedLogger');
+    
+    const wss = new WebSocket.WebSocketServer({ 
+      server: httpServer,
+      path: '/ws/logs'
+    });
+    
+    const logHandler = new LogWebSocketHandler();
+    
+    wss.on('connection', (ws: any) => {
+      logHandler.addClient(ws);
+    });
+  }
+  
   return httpServer;
 }

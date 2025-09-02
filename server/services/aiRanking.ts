@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { storage } from "../storage";
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { getCleanOpenAIKey } from '../utils/getOpenAIKey';
 
 export interface AIRankingResult {
   candidateId: number;
@@ -12,6 +11,15 @@ export interface AIRankingResult {
 export class AIRankingService {
   static async rankCandidatesForJob(jobId: number, userId?: string): Promise<AIRankingResult[]> {
     try {
+      // Get fresh API key and create OpenAI instance
+      const apiKey = getCleanOpenAIKey();
+      if (!apiKey) {
+        console.error('[AIRanking] No OpenAI API key available');
+        return [];
+      }
+      
+      const openai = new OpenAI({ apiKey });
+      
       // Get job details and candidates - filtered by user for proper isolation
       const job = await storage.getJob(jobId, userId);
       const candidates = await storage.getCandidatesWithScores(jobId, userId);
@@ -75,23 +83,67 @@ Respond with JSON in this exact format:
 }
 `;
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert technical recruiter with deep understanding of software engineering roles and candidate evaluation. Always respond with valid JSON."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.3,
-      });
+      // Log processing info
+      console.log(`[AIRanking] Processing ${candidates.length} candidates`);
+      
+      // Try GPT-5 first, then GPT-4o
+      let response;
+      const modelsToTry = ["gpt-5", "gpt-4o"];
+      let modelUsed = "";
+      
+      for (const model of modelsToTry) {
+        try {
+          console.log(`[AIRanking] Attempting to use ${model} model`);
+          response = await openai.chat.completions.create({
+            model: model,
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert technical recruiter with deep understanding of software engineering roles and candidate evaluation. Always respond with valid JSON."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.3,
+          // No max_tokens limit - let OpenAI return complete response
+        });
+        modelUsed = model;
+        console.log(`[AIRanking] Successfully using model: ${model}`);
+        break; // Success, exit loop
+      } catch (error: any) {
+        console.log(`[AIRanking] ${model} not available: ${error.message}`);
+        if (model === modelsToTry[modelsToTry.length - 1]) {
+          // Last model in list, throw error
+          throw new Error(`No available models. Tried: ${modelsToTry.join(', ')}`);
+        }
+        // Try next model
+      }
+    }
+    
+    if (!response) {
+      throw new Error('Failed to get response from any model');
+    }
+      
+      console.log(`[AIRanking] Successfully used model: ${modelUsed}`);
 
-      const result = JSON.parse(response.choices[0].message.content || "{}");
+      // Log the raw response for debugging
+      console.log('[AIRanking] OpenAI response received');
+      console.log('[AIRanking] Response choices:', response.choices?.length);
+      console.log('[AIRanking] Response content:', response.choices[0]?.message?.content);
+      
+      if (!response.choices || response.choices.length === 0) {
+        throw new Error('No response from OpenAI');
+      }
+      
+      const messageContent = response.choices[0].message.content;
+      if (!messageContent) {
+        throw new Error('Empty response from OpenAI');
+      }
+      
+      const result = JSON.parse(messageContent);
       
       if (!result.rankings || !Array.isArray(result.rankings)) {
         throw new Error('Invalid AI response format');
@@ -137,9 +189,29 @@ Respond with JSON in this exact format:
 
       return allRankings;
 
-    } catch (error) {
-      console.error('AI ranking failed:', error);
-      return [];
+    } catch (error: any) {
+      console.error('[AIRanking] Error occurred:', error);
+      console.error('[AIRanking] Error message:', error?.message);
+      console.error('[AIRanking] Error stack:', error?.stack);
+      
+      // Check for API key issues
+      if (error?.status === 401 || error?.message?.includes('401') || error?.message?.includes('API key')) {
+        console.error('OpenAI API Key Error: The API key is invalid or missing. Please check your OPENAI_API_KEY in the .env file.');
+        throw new Error('OpenAI API key is invalid. Please contact the administrator to update the API key.');
+      }
+      
+      // Log detailed error for debugging
+      if (error?.response) {
+        console.error('OpenAI API Response:', error.response.status, error.response.data);
+      }
+      
+      // Check for JSON parsing errors
+      if (error?.message?.includes('JSON') || error?.message?.includes('parse')) {
+        console.error('[AIRanking] JSON parsing error - OpenAI response may be malformed');
+        throw new Error('AI ranking failed: Unable to parse OpenAI response. Please try again.');
+      }
+      
+      throw new Error(`AI ranking failed: ${error?.message || 'Unknown error'}`);
     }
   }
 

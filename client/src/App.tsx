@@ -18,9 +18,11 @@ import VerifyEmail from "@/pages/VerifyEmail";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import NotFound from "@/pages/not-found";
+import LogViewer from "@/pages/LogViewer";
 import { useEffect } from "react";
 import { initGA } from "./lib/analytics";
 import { useAnalytics } from "./hooks/use-analytics";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -52,6 +54,7 @@ function Router() {
           <Route path="/blog-management" component={BlogManagement} />
           <Route path="/blog-view" component={BeautifulBlog} />
           <Route path="/change-password" component={ChangePassword} />
+          <Route path="/logs" component={LogViewer} />
         </>
       )}
       <Route component={NotFound} />
@@ -71,12 +74,14 @@ function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
