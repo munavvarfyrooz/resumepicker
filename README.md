@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # SmartHire - CV Ranking & JD Matching Platform
 
 An intelligent CV ranking and job description matching system with transparent scoring, built using React, Express, TypeScript, and PostgreSQL.
@@ -106,3 +107,7 @@ An intelligent CV ranking and job description matching system with transparent s
 ```bash
 # Start both frontend and backend in development mode
 npm run dev
+=======
+# resumepicker
+Resume Picker
+>>>>>>> d2e90d73e3170de8bc5e983a0949bc771013affc
