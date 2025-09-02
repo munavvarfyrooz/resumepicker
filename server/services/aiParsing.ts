@@ -1,4 +1,5 @@
 import { EmbeddingsService } from './embeddings';
+import { getCleanOpenAIKey } from '../utils/getOpenAIKey';
 
 export interface AISkillExtraction {
   skills: string[];
@@ -8,10 +9,12 @@ export interface AISkillExtraction {
 }
 
 export class AIParsingService {
-  private static apiKey = process.env.OPENAI_API_KEY;
+  private static apiKey = getCleanOpenAIKey();
 
   static async extractSkillsWithAI(cvText: string): Promise<AISkillExtraction> {
-    if (!this.apiKey) {
+    // Get fresh key on each call to ensure we have the latest from .env
+    const currentKey = getCleanOpenAIKey();
+    if (!currentKey) {
       console.warn('OpenAI API key not available, falling back to basic parsing');
       return this.fallbackParsing(cvText);
     }
@@ -20,11 +23,11 @@ export class AIParsingService {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          'Authorization': `Bearer ${currentKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4o', // Using latest GPT-4o model
           messages: [
             {
               role: 'system',

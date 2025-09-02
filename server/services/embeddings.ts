@@ -1,6 +1,8 @@
 // Abstract embeddings service for future AI integration
 // Currently returns mock vectors but can be extended for OpenAI integration
 
+import { getCleanOpenAIKey } from '../utils/getOpenAIKey';
+
 export interface EmbeddingResult {
   vector: number[];
   text: string;
@@ -8,24 +10,26 @@ export interface EmbeddingResult {
 
 export class EmbeddingsService {
   private static useAI = true; // Enable AI features now that we have the API key
-  private static apiKey = process.env.OPENAI_API_KEY || process.env.API_KEY || 'mock_key';
+  private static apiKey = getCleanOpenAIKey() || 'mock_key';
 
   static async generateEmbedding(text: string): Promise<EmbeddingResult> {
-    if (this.useAI && this.apiKey !== 'mock_key') {
-      return await this.generateRealEmbedding(text);
+    // Get fresh key on each call to ensure we have the latest from .env
+    const currentKey = getCleanOpenAIKey();
+    if (this.useAI && currentKey && currentKey !== 'mock_key') {
+      return await this.generateRealEmbedding(text, currentKey);
     } else {
       return this.generateMockEmbedding(text);
     }
   }
 
-  private static async generateRealEmbedding(text: string): Promise<EmbeddingResult> {
+  private static async generateRealEmbedding(text: string, apiKey: string): Promise<EmbeddingResult> {
     // Future implementation for OpenAI API calls
     // This would use the actual OpenAI embeddings API
     try {
       const response = await fetch('https://api.openai.com/v1/embeddings', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
