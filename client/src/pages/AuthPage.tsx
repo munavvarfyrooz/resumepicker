@@ -53,7 +53,7 @@ export default function AuthPage() {
     onSuccess: () => {
       setLoginError(null);
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      setLocation("/");
+      setLocation("/dashboard");
     },
     onError: (error: Error) => {
       setLoginError(error.message);
@@ -67,7 +67,7 @@ export default function AuthPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      setLocation("/");
+      setLocation("/dashboard");
     },
     onError: (error: Error) => {
       toast({

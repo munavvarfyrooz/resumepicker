@@ -71,7 +71,7 @@ export function setupSimpleAuth(app: Express) {
   const PostgresSessionStore = connectPg(session);
   const sessionStore = new PostgresSessionStore({
     conString: process.env.DATABASE_URL,
-    createTableIfMissing: false, // Disable automatic table creation
+    createTableIfMissing: true, // Enable automatic table creation
     tableName: 'sessions'
   });
 
@@ -240,6 +240,7 @@ export function setupSimpleAuth(app: Express) {
       });
     } catch (error) {
       console.error("[AUTH] Registration error:", error);
+      console.error("[AUTH] Error details:", JSON.stringify(error, null, 2));
       res.status(500).json({ message: "Internal server error during registration" });
     }
   });

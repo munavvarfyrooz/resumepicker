@@ -5,9 +5,49 @@ import { Badge } from "@/components/ui/badge";
 import { Users, BarChart3, Upload, Settings, LogOut, Edit, FileText, Lock } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { ContactSupport } from "@/components/ContactSupport";
+import { useQuery } from "@tanstack/react-query";
 
 export default function Home() {
   const { user } = useAuth();
+  
+  // Admin: Fetch system-wide stats
+  const { data: adminStats, isLoading: adminStatsLoading } = useQuery({
+    queryKey: ['/api/admin/stats/usage'],
+    enabled: user?.role === 'admin',
+    select: (data: any) => {
+      console.log('Admin usage stats:', data);
+      return data || { totalJobs: 0, totalCandidates: 0, totalShortlisted: 0 };
+    },
+  });
+  
+  // Regular users: Fetch their own jobs
+  const { data: userJobs = [], isLoading: userJobsLoading } = useQuery({
+    queryKey: ['/api/jobs'],
+    enabled: user?.role !== 'admin',
+    select: (data: any) => {
+      console.log('User jobs:', data);
+      return Array.isArray(data) ? data : [];
+    },
+  });
+  
+  // Regular users: Fetch candidate counts for their jobs
+  const { data: userCandidateCounts = {}, isLoading: userCountsLoading } = useQuery({
+    queryKey: ['/api/jobs/candidate-counts'],
+    enabled: user?.role !== 'admin',
+    select: (data: any) => {
+      console.log('User candidate counts:', data);
+      return data || {};
+    },
+  });
+  
+  // Calculate stats based on user role
+  const isAdmin = user?.role === 'admin';
+  const totalJobs = isAdmin ? (adminStats?.totalJobs || 0) : userJobs.length;
+  const totalCandidates = isAdmin 
+    ? (adminStats?.totalCandidates || 0) 
+    : Object.values(userCandidateCounts).reduce((sum: number, count: any) => sum + (count || 0), 0);
+  const totalShortlisted = adminStats?.totalShortlisted || 0;
+  const isLoading = isAdmin ? adminStatsLoading : (userJobsLoading || userCountsLoading);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -210,21 +250,36 @@ export default function Home() {
 
           <Card className="border-0 shadow-md">
             <CardHeader>
-              <CardTitle>Quick Stats</CardTitle>
+              <CardTitle>
+                {isAdmin ? "System Stats" : "Your Stats"}
+              </CardTitle>
+              {isAdmin && (
+                <CardDescription>Overall platform statistics</CardDescription>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center p-4 bg-blue-50 dark:bg-blue-900 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">0</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Jobs Created</div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                  {isLoading ? "..." : totalJobs}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  {isAdmin ? "Total Jobs" : "Your Jobs"}
+                </div>
               </div>
               
               <div className="text-center p-4 bg-green-50 dark:bg-green-900 rounded-lg">
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">0</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">Candidates Uploaded</div>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                  {isLoading ? "..." : totalCandidates}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  {isAdmin ? "Total Candidates" : "Your Candidates"}
+                </div>
               </div>
               
               <div className="text-center p-4 bg-purple-50 dark:bg-purple-900 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">0</div>
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                  {totalShortlisted}
+                </div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">Shortlisted</div>
               </div>
             </CardContent>
