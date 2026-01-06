@@ -10,6 +10,7 @@ import {
   blogPosts,
   blogCategories,
   blogPostCategories,
+  mediaAssets,
   type Job, 
   type Candidate, 
   type CandidateWithScore, 
@@ -851,23 +852,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Media operations implementation
-  async createMediaAsset(insertAsset: any): Promise<any> {
-    // MediaAsset functionality will be implemented when needed
-    return insertAsset;
+  async createMediaAsset(insertAsset: InsertMediaAsset): Promise<MediaAsset> {
+    const [mediaAsset] = await db
+      .insert(mediaAssets)
+      .values(insertAsset)
+      .returning();
+    return mediaAsset;
   }
 
-  async getMediaAssets(): Promise<any[]> {
-    // MediaAsset functionality will be implemented when needed
-    return [];
+  async getMediaAssets(): Promise<MediaAsset[]> {
+    return await db
+      .select()
+      .from(mediaAssets)
+      .orderBy(desc(mediaAssets.createdAt));
   }
 
-  async getMediaAsset(id: number): Promise<any | undefined> {
-    // MediaAsset functionality will be implemented when needed
-    return undefined;
+  async getMediaAsset(id: number): Promise<MediaAsset | undefined> {
+    const [mediaAsset] = await db
+      .select()
+      .from(mediaAssets)
+      .where(eq(mediaAssets.id, id));
+    return mediaAsset;
   }
 
   async deleteMediaAsset(id: number): Promise<void> {
-    // MediaAsset functionality will be implemented when needed
+    await db
+      .delete(mediaAssets)
+      .where(eq(mediaAssets.id, id));
   }
   async updateUserPassword(id: string, newPassword: string): Promise<void> {
     const bcrypt = await import('bcrypt');
