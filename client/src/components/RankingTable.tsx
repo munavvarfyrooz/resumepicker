@@ -129,11 +129,11 @@ export default function RankingTable() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                toggleCandidateSelection(candidate.id);
                 if (!isShortlisted) {
-                  toggleCandidateSelection(candidate.id);
-                  toast({ title: "Added to shortlist", description: `${candidate.name} added. Go to Shortlist tab to manage.` });
+                  toast({ title: "Added to shortlist", description: `${candidate.name} added.` });
                 } else {
-                  toast({ description: "To remove, go to the Shortlist tab.", duration: 2000 });
+                  toast({ title: "Removed from shortlist", description: `${candidate.name} removed.` });
                 }
               }}
               className="ml-1 p-1 rounded hover:bg-gray-100 transition-colors flex-shrink-0"
@@ -419,11 +419,11 @@ export default function RankingTable() {
                       onClick={(e) => {
                         e.stopPropagation();
                         const isShortlisted = selectedCandidateIds.includes(candidate.id);
+                        toggleCandidateSelection(candidate.id);
                         if (!isShortlisted) {
-                          toggleCandidateSelection(candidate.id);
                           toast({ title: "Added to shortlist", description: `${candidate.name} added.` });
                         } else {
-                          toast({ description: "To remove, go to the Shortlist tab.", duration: 2000 });
+                          toast({ title: "Removed from shortlist", description: `${candidate.name} removed.` });
                         }
                       }}
                       className="p-1 rounded hover:bg-gray-100"
