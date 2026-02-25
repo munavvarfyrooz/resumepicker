@@ -11,11 +11,10 @@ import {
 import { useAppStore } from "@/store/appStore";
 import { type CandidateWithScore } from "@shared/schema";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { ArrowUpDown, ArrowUp, ArrowDown, Trash2, MoreVertical } from "lucide-react";
+import { ArrowUpDown, ArrowUp, ArrowDown, Trash2, MoreVertical, Bookmark } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -31,7 +30,6 @@ export default function RankingTable() {
   const {
     candidates,
     selectedCandidateIds,
-    setSelectedCandidateIds,
     toggleCandidateSelection,
     setSelectedCandidate,
     filters,
@@ -92,30 +90,6 @@ export default function RankingTable() {
 
   const columns: ColumnDef<CandidateWithScore>[] = [
     {
-      id: 'select',
-      header: ({ table }) => (
-        <Checkbox
-          checked={table.getIsAllPageRowsSelected()}
-          onCheckedChange={(value) => {
-            if (value) {
-              setSelectedCandidateIds(filteredCandidates.map(c => c.id));
-            } else {
-              setSelectedCandidateIds([]);
-            }
-          }}
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={selectedCandidateIds.includes(row.original.id)}
-          onCheckedChange={() => toggleCandidateSelection(row.original.id)}
-        />
-      ),
-      enableSorting: false,
-      size: 30,
-      maxSize: 30,
-    },
-    {
       accessorKey: 'name',
       header: ({ column }) => (
         <Button
@@ -135,6 +109,7 @@ export default function RankingTable() {
       ),
       cell: ({ row }) => {
         const candidate = row.original;
+        const isShortlisted = selectedCandidateIds.includes(candidate.id);
         const initials = candidate.name
           .split(' ')
           .map(n => n[0])
@@ -147,15 +122,32 @@ export default function RankingTable() {
             <Avatar className="h-8 w-8">
               <AvatarFallback className="text-xs">{initials}</AvatarFallback>
             </Avatar>
-            <div>
+            <div className="flex-1">
               <p className="font-medium text-text-primary">{candidate.name}</p>
               <p className="text-sm text-text-secondary">{candidate.email}</p>
             </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isShortlisted) {
+                  toggleCandidateSelection(candidate.id);
+                  toast({ title: "Added to shortlist", description: `${candidate.name} added. Go to Shortlist tab to manage.` });
+                } else {
+                  toast({ description: "To remove, go to the Shortlist tab.", duration: 2000 });
+                }
+              }}
+              className="ml-1 p-1 rounded hover:bg-gray-100 transition-colors flex-shrink-0"
+              title={isShortlisted ? "Shortlisted — remove from Shortlist tab" : "Add to shortlist"}
+            >
+              <Bookmark
+                className={`h-4 w-4 ${isShortlisted ? 'fill-green-500 text-green-500' : 'text-gray-300 hover:text-gray-500'}`}
+              />
+            </button>
           </div>
         );
       },
-      size: 180,
-      maxSize: 200,
+      size: 210,
+      maxSize: 240,
     },
     {
       id: 'manualRank',
@@ -416,11 +408,6 @@ export default function RankingTable() {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-3">
-                    <Checkbox
-                      checked={selectedCandidateIds.includes(candidate.id)}
-                      onCheckedChange={(checked) => toggleCandidateSelection(candidate.id)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
                     <Avatar className="w-10 h-10">
                       <AvatarFallback className="text-sm bg-blue-100 text-blue-600">
                         {candidate.name.slice(0, 2).toUpperCase()}
@@ -428,6 +415,21 @@ export default function RankingTable() {
                     </Avatar>
                   </div>
                   <div className="flex items-center space-x-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const isShortlisted = selectedCandidateIds.includes(candidate.id);
+                        if (!isShortlisted) {
+                          toggleCandidateSelection(candidate.id);
+                          toast({ title: "Added to shortlist", description: `${candidate.name} added.` });
+                        } else {
+                          toast({ description: "To remove, go to the Shortlist tab.", duration: 2000 });
+                        }
+                      }}
+                      className="p-1 rounded hover:bg-gray-100"
+                    >
+                      <Bookmark className={`h-5 w-5 ${selectedCandidateIds.includes(candidate.id) ? 'fill-green-500 text-green-500' : 'text-gray-300'}`} />
+                    </button>
                     <div className="text-right">
                       <div className="text-xl font-bold text-blue-600">
                         {candidate.score?.totalScore?.toFixed(0) || 0}
